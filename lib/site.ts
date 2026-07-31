@@ -4,7 +4,7 @@ export const siteConfig = {
   description:
     "Senior Data Analyst turning complex data into clear decisions — SQL, Snowflake, Tableau, and AI-assisted analytics.",
   tagline: "Turning complex data into clear decisions",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://portfolio-maf345.vercel.app",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://mehedi-farazi.vercel.app",
   author: "Mehedi Afzal Farazi",
   location: "Dhaka, Bangladesh",
   email: "mehedi.farazi33@gmail.com",
