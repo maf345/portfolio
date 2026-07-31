@@ -1,0 +1,50 @@
+---
+title: Snowflake KPI Layers — Patterns That Scale
+description: Practical patterns for designing dashboard-ready KPI layers in Snowflake — from staging to metric definitions stakeholders can trust.
+date: 2026-01-15
+tags:
+  - Snowflake
+  - SQL
+  - KPI Design
+category: Analytics
+draft: false
+---
+
+Reporting breaks when KPI logic lives inside dashboards instead of the warehouse. Here are patterns I use when building analytical layers that scale.
+
+## Start with grain, not visuals
+
+Define the **grain** of each reporting dataset before writing SQL. A KPI layer at the wrong grain forces every dashboard to re-aggregate — and that's where refresh failures and metric drift begin.
+
+```sql
+-- Example: daily account-level KPI grain
+SELECT
+  account_id,
+  report_date,
+  SUM(revenue) AS daily_revenue,
+  COUNT(DISTINCT session_id) AS daily_sessions
+FROM fct_events
+GROUP BY 1, 2;
+```
+
+## Separate staging, intermediate, and mart layers
+
+| Layer | Purpose |
+|-------|---------|
+| Staging | Source-aligned cleanup, typing, deduplication |
+| Intermediate | Business logic joins, event reconstruction |
+| Mart / KPI | Dashboard-ready metrics with documented definitions |
+
+> **Please note:** Document every metric definition alongside the SQL. Future you — and every stakeholder — will thank you.
+
+## Validate before publish
+
+Source-to-report reconciliation catches 80% of trust issues before stakeholders do:
+
+- Row counts at each layer
+- Key totals vs. finance or ops source systems
+- Null rate thresholds on critical dimensions
+
+## What's next
+
+In a follow-up post I'll cover refresh monitoring and anomaly checks — the workflow that helped reduce dashboard failures by 60% on a Tableau + Snowflake stack.

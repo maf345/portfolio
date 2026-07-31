@@ -1,0 +1,215 @@
+---
+title: "Flatten Nested JSON in Snowflake via Local Stage"
+description: "Load nested JSON from a local file into Snowflake, stage it, and flatten into relational tables with SQL."
+date: 2022-06-01
+tags:
+  - Snowflake
+  - JSON
+  - ETL
+category: Snowflake
+draft: false
+---
+
+## Introduction
+
+Snowflake is a popular cloud-based data warehouse platform. Loading JSON data into Snowflake can be accomplished using various methods, depending on your specific requirements. Snowflake provides several options for loading JSON data, including:
+
+- COPY INTO Command
+- Snowpipe 
+- ETL Tools: Apache NiFi, Talend, Informatica, etc.
+- REST APIs
+- Third-Party Integration, etc.
+
+In this blog, we will see how we can use SnowSQL to load a JSON file from a local drive to the Snowflake stage. Once the file is staged, we will flatten the file into tabular format and finally store the flat data in a relational table.
+
+## Prerequisites
+
+First you have to download this JSON file from [Json file with hierarchy 500 Records](https://docs.google.com/uc?export=download&id=1G_9faCq0UbTjFVB6UpMASq5rQrzrN9OU) if you want to follow all along. The file is manually modified later slightly for making it easier to work with. 
+
+Below is a preview of the file before modification - 
+
+![Image 1](/images/blog/snowflake-flatten-json/image1.png)
+
+Below is a preview of the file after modification - 
+
+![Image 2](/images/blog/snowflake-flatten-json/image2.png)
+
+So the modification was, `feeds` key was removed from the top along with brackets `{...}` from top and bottom.  
+
+We will be using SnowSQL for staging downloaded JSON file into a Snowflake stage we have to use `PUT` command and `PUT` command is supported only using SnowSQL. If SnowSQL is not installed and configured in your machine, you may follow my blog on - **SnowSQL - Install and Configure Snowflake CLI**
+
+Additionally resources on SnowSQL by Snowflake - 
+
+- [Getting Started with SnowSQL](https://quickstarts.snowflake.com/guide/getting_started_with_snowsql/#0)
+- [SnowSQL (CLI Client)](https://docs.snowflake.com/en/user-guide/snowsql)
+
+## Step 1: SnowSQL Login
+
+I'll be using SnowSQL to run most of the codes. If you prefer you may run all these codes in Snowsight except [Step 4: Put file into Stage](#Step-4:-Put-file-into-Stage), which requires SnowSQL to run.
+
+Let's start by opening SnowSQL in your favorite terminal. I'm using [Cmder](https://cmder.app/) (full version), a popular open source console emulator for Windows.
+
+We will start by starting SnowSQL with default parameters by writing `snowsql` in the terminal. 
+
+![Image 3](/images/blog/snowflake-flatten-json/image3.png)
+
+In your case, the database *TECHNICAL_BLOG_DB* and the schema *SNOWSQL_SCHEMA* might not be available. You can create a database/schema by running `CREATE DATABASE TECHNICAL_BLOG_DB` and `CREATE SCHEMA SNOWSQL_SCHEMA`.  
+
+![Image 4](/images/blog/snowflake-flatten-json/image4.png)
+
+The default *PYTHON_SCHEMA* is not the one we will be using in this article. We will use a schema called *SNOWSQL_SCHEMA* by running `USE SCHEMA SNOWSQL_SCHEMA`. 
+
+Now that we are in the right database and schema, we are good to follow the next steps.
+
+## Step 2: Create File Format
+
+We will run the below command to create a *File Format* object named *SAMPLEJSONFORMAT* of type JSON. 
+
+```sql
+CREATE OR REPLACE file format SAMPLEJSONFORMAT TYPE = JSON;
+```
+
+![Image 5](/images/blog/snowflake-flatten-json/image5.png)
+
+## Step 3: Create Stage
+
+Now we will create a stage *SAMPLEJSONSTAGE* with the file format object we just created. 
+
+```sql
+CREATE OR REPLACE stage SAMPLEJSONSTAGE FILE_FORMAT = SAMPLEJSONFORMAT;
+```
+
+![Image 6](/images/blog/snowflake-flatten-json/image6.png)
+
+## Step 4: Put file into Stage
+
+We will use SnowSQL to stage JSON file from local drive into Snowflake stage *SAMPLEJSONSTAGE*. 
+
+```sql
+PUT file://D:\Projects\Blog\Snowflake\_data\json\sample_json_500_records.json @SAMPLEJSONSTAGE; 
+```
+
+![Image 7](/images/blog/snowflake-flatten-json/image7.png)
+
+In the status column we can see that the file was uploaded successfully. We can also confirm by running `LIST @SAMPLEJSONSTAGE;
+` command. 
+
+![Image 8](/images/blog/snowflake-flatten-json/image8.png)
+
+## Step 5: Copy JSON data into Table
+
+We will first create a table with only one column of *VARIANT* type. 
+
+```sql
+CREATE OR REPLACE table SAMPLE_JSON_RAW (RAW_DATA variant);
+```
+
+![Image 9](/images/blog/snowflake-flatten-json/image9.png)
+
+After that we will COPY the JSON data from *SAMPLEJSONSTAGE* into the snowflake table *SAMPLE_JSON_RAW* we just created. 
+
+```sql
+COPY INTO SAMPLE_JSON_RAW 
+     FROM @SAMPLEJSONSTAGE 
+     file_format = SAMPLEJSONFORMAT 
+     files = ('sample_json_500_records.json.gz');
+```
+
+![Image 10](/images/blog/snowflake-flatten-json/image10.png)
+
+In order to preview the data after successful copying we need to run below command. 
+
+```sql
+SELECT * FROM SAMPLE_JSON_RAW LIMIT 2;
+```
+
+## Step 6: Flatten JSON data and Insert into Table
+
+We will run the below code to flatten the complete sample JSON data and store it in a relational table. 
+
+```sql
+CREATE OR REPLACE TABLE sample_json_flattened AS
+    SELECT 
+        RAW_DATA:id::int AS id,
+        RAW_DATA:userId::int AS userid,
+        RAW_DATA:name::string AS name, 
+        RAW_DATA:title::string AS title,
+        
+        -- handling nested elements
+        RAW_DATA:likeDislike.likes::int AS likes,
+        RAW_DATA:likeDislike.dislikes::int AS dislikes,
+        RAW_DATA:likeDislike.userAction::int AS useraction,
+        
+        -- handling array
+        f.value:id::int AS multimedia_id,
+        f.value:name::string AS multimedia_name,
+        f.value:description::string AS multimedia_description,
+        f.value:url::string AS multimedia_url,
+        f.value:mediatype::string AS multimedia_mediatype,
+        f.value:likeCount::int AS multimedia_like_count,
+        f.value:place::string AS multimedia_place,
+        f.value:createAt::TIMESTAMP_TZ AS multimedia_created_at,    
+        
+        RAW_DATA:lng::int AS longitude, 
+        RAW_DATA:lat::int AS latitude,
+        RAW_DATA:isdeleted::boolean AS id_deleted,
+        RAW_DATA:profilePicture::string AS profile_pic,
+        RAW_DATA:videoUrl::string AS video_url,
+        RAW_DATA:images::string AS images,
+        RAW_DATA:mediatype::string AS media_type,
+        RAW_DATA:imagePaths::string AS image_paths, 
+        RAW_DATA:feedsComment::string AS feeds_comment, 
+        RAW_DATA:commentCount::string AS comment_count, 
+        RAW_DATA:createdAt::TIMESTAMP_TZ AS created_at,
+        RAW_DATA:code::string AS code,
+        RAW_DATA:msg::string AS message,
+        RAW_DATA:description::string AS description, 
+        RAW_DATA:location::string AS location
+
+    FROM 
+    	SAMPLE_JSON_RAW, 
+    	table(flatten(RAW_DATA:multiMedia)) f;
+        
+     -- lateral flatten ( input => RAW_DATA:multiMedia ) f
+```
+
+Remember to select the right database and warehouse in Snowsight (highlighted in yellow) before executing the code. Otherwise you need to give fully qualified table name like `TECHNICAL_BLOG_DB.SNOWSQL_SCHEMA.SAMPLE_JSON_RAW` and `TECHNICAL_BLOG_DB.SNOWSQL_SCHEMA.SAMPLE_JSON_FLATTENED`.
+
+![Image 11](/images/blog/snowflake-flatten-json/image11.png)
+
+You might have noticed that the last line of the code is commented `-- lateral flatten ( input => RAW_DATA:multiMedia ) f`. Basically **table flatten** and **lateral flatten** will produce the same output. So you may consider any of these two.
+
+## Step 7: Preview Flattened Data
+
+We can now preview the flattened data by querying the table. 
+
+```sql
+SELECT * FROM TECHNICAL_BLOG_DB.SNOWSQL_SCHEMA.SAMPLE_JSON_FLATTENED LIMIT 5;
+```
+
+![Image 12](/images/blog/snowflake-flatten-json/image12.png)
+
+Rows count before flatten:
+
+![Image 13](/images/blog/snowflake-flatten-json/image13.png)
+
+Rows count after flatten:
+
+![Image 14](/images/blog/snowflake-flatten-json/image14.png)
+
+So there are 240 rows which contains duplicate records because array `multiMedia` contains multiple values for those rows in JSON raw data.
+
+## Resources
+
+Here are a few websites I found helpful while preparing this article. I'm hoping that you'll learn more and develop greater confidence by practicing with some fresh samples.
+
+- https://jsonformatter.org/ *(for formatting JSON)*
+- https://www.appsloveworld.com/download-sample-json-file-with-multiple-records *(the example 500 records file is used in this article)*
+- https://dummyjson.com/docs/users 
+- https://duckdb.org/2023/03/03/json.html
+
+## Conclusion
+
+I am aware that, we are storing all the columns data in a single table. Hence many columns data is being duplicated. Therefore, normalization is necessary for storage and query performance enhancement. But that part is not being considered here as the sole purpose of this article is to show readers how to flatten nested JSON and stage JSON files from local drives. 
+
+I appreciate you reading all the way through this article. I sincerely hope it was useful, and I can't wait to see you again. Happy learning!

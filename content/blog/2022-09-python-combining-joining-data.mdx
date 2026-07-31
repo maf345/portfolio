@@ -1,0 +1,278 @@
+---
+title: "Combining and Joining Data with Python"
+description: "Concatenate CSV files, merge DataFrames, and join datasets \u2014 patterns I use for multi-source reporting prep."
+date: 2022-09-01
+tags:
+  - Python
+  - Pandas
+  - Data Prep
+category: Python
+draft: false
+---
+
+## Introduction
+
+Combining and joining data in data analysis is a frequent and crucial task an analyst does in their day-to-day lives. It enables analysts to uncover hidden patterns, correlations, and relationships that may not be present when analyzing individual datasets. Also, in many real-world scenarios, data resides in different databases, systems, or formats. Combining and joining data allows seamless integration of these disparate data sources, which ultimately enables better utilization of available data assets.
+
+In this blog, we will be using the `csv` and `xlsx` file formats to demonstrate how data `union` and `join` operations are performed in Python. I will be showing how these operations can be performed with both Excel and CSV files. I'm excited to share some of my favorite tricks and best practices along the way. Let's get started.
+
+## Import Necessary Libraries
+
+```python
+import re
+import os
+import glob
+import numpy as np
+import pandas as pd
+```
+
+## Combining Data
+
+Today's blog has two major sections: combining data and joining data.
+
+We will start by combining multiple CSV files stored in a folder. Later, we will see how we can perform the same operation if our data is stored in Excel sheets instead.
+
+By the word **combine**, we mean that we will merge the data of different files or sheets into single file or sheet one after another. The concept is similar to the SQL `union` operation.
+
+### Combining multiple files - CSV
+
+We have some yearly source data that is stored at the below location. We will first need to find this location in our code. After that, we will search for all the CSV files (search by `.csv` extension) and loop over each CSV file and append rows one after another.
+
+![CSV files location in HDD](/images/blog/python-combining-joining/image-1.png)
+
+#### Setting up path for reading files
+
+```python
+path = os.getcwd()
+subdirectory = 'data\yearly-data'
+
+directory = os.path.join(path, subdirectory, '*.csv')
+directory
+```
+
+```python
+csv_files = glob.glob(directory)
+csv_files
+```
+
+#### Reading and concatenating all CSV files in a folder
+
+```python
+li = []
+
+for filename in csv_files:
+    data = pd.read_csv(filename, index_col = None, header = 0, encoding= 'unicode_escape', parse_dates = [2, 3], infer_datetime_format = '%m/%d/%Y')
+    data['file_name'] = filename.split("\\")[-1]
+    li.append(data)
+
+df = pd.concat(li, axis = 0, ignore_index = True)
+df.head(2)
+```
+
+#### Formatting column names in a unified format
+
+This step is optional, but I prefer column names to be in a unified format. I think it looks beautiful, and it's convenient for databases, systems, etc. too.
+
+Below, we are replacing all non-alphanumeric characters with the underscore `(_)`. After that, we convert all the alphanumeric characters into common case (e.g., lower case).
+
+```python
+for col in df.columns:
+    df.rename(columns = {
+        col : re.sub('[^0-9a-zA-Z]+', '_', col).lower()
+    }, inplace = True)
+```
+
+```python
+df.info()
+```
+
+#### Verifying concatenated dataframe row count by file name
+
+```python
+df['file_name'].value_counts()
+```
+
+```python
+df['file_name'].value_counts().sum()
+```
+
+Creating a folder, namely 'output' in the current working directory only if it's not present there. Otherwise, it'll give the error `FileNotFoundError: [Errno 2] No such file or directory` while exporting to CSV.
+
+```python
+path = os.getcwd()
+new_folder_name = 'output'
+
+new_folder = os.path.join(path, new_folder_name)
+
+if not os.path.exists(new_folder):
+    os.makedirs(new_folder)
+```
+
+```python
+df.to_csv('output\combined_csv_data.csv', index = False)
+```
+
+This concludes combining multiple CSV files into a single one. Now we can export the data into an Excel sheet or a CSV file, or work further on this data.
+
+### Combining multiple sheets - Excel
+
+In this step, we will see how we can achieve the same purpose if our source data is stored on multiple sheets of an Excel file.
+
+#### Setting up path for reading file
+
+```python
+path = os.getcwd()
+subdirectory = 'data'
+
+file = os.path.join(path, subdirectory, 'superstore_2016-2020_data.xlsx')
+file
+```
+
+#### Selecting sheets for concatenation
+
+Our Excel file can have multiple sheets, which we don't need to combine. Hence, we are selecting only the sheets whose names match the pattern `Orders *`, as these are the sheets that contain yearly order data.
+
+```python
+excel_file = pd.ExcelFile(file)
+
+sheets = excel_file.sheet_names
+r = re.compile('Orders *')
+selected_sheets = list(filter(r.match, sheets))
+
+selected_sheets
+```
+
+#### Reading and concatenating selected sheets
+
+```python
+li = []
+
+for sheet in selected_sheets:
+    data = excel_file.parse(sheet)
+    data['sheet_name'] = sheet.split("\\")[-1]
+    li.append(data)
+
+df = pd.concat(li, axis = 0, ignore_index = True)
+df.head(2)
+```
+
+#### Formatting column names in a unified format
+
+This step is optional. Please refer to section - [Formatting column names in a unified format](#Formatting-column-names-in-a-unified-format) for more details on this step.
+
+```python
+for col in df.columns:
+    df.rename(columns = {
+        col : re.sub('[^0-9a-zA-Z]+', '_', col).lower()
+    }, inplace = True)
+```
+
+```python
+df.info()
+```
+
+#### Verifying concatenated dataframe row count by sheet name
+
+```python
+df['sheet_name'].value_counts()
+```
+
+```python
+df.to_excel('output\combined_excel_data.xlsx', index = False)
+```
+
+## Joining Data
+
+We've successfully completed the combining data step. Now the next part we will look into is how we can join data based on matching columns between two data sources.
+
+We will work on an excel file called superstore_additional_info.xlsx, which contains two sheets: 'returned_orders' and 'sales_reps'. We will join these two sheets with our consolidated 'orders' data (stored as `df` in our code).
+
+### Returned orders join with all orders data
+
+The 'returned_orders' sheet contains information only for those orders that were returned. Since it doesn't contain non-returned order information, we will be using a left' join so that we can keep information on all the orders along with returned orders.
+
+```python
+path = os.getcwd()
+subdirectory = 'data'
+
+file = os.path.join(path, subdirectory, 'superstore_additional_info.xlsx')
+file
+```
+
+```python
+returns = pd.read_excel(file, sheet_name = 0)
+returns.head(2)
+```
+
+```python
+df_with_returned_data = pd.merge(df, returns, left_on = 'order_id', right_on = 'Order ID', how = 'left')
+df_with_returned_data.head(2)
+```
+
+Dropping `Order ID` column as we have the same column present in left table.
+
+```python
+df_with_returned_data.drop('Order ID', axis = 1, inplace = True)
+```
+
+Renaming column `Returned` as `is_returned` for better understanding and format matching with other columns.
+
+```python
+df_with_returned_data.rename(columns = {'Returned':'is_returned'}, inplace = True)
+```
+
+```python
+df_with_returned_data.info()
+```
+
+Replacing all the **Null** values of `is_returned` column with **No**. Those 'order_id' do not exist in `returns` data that's why after the left join they were marked as **Null**.
+
+```python
+df_with_returned_data['is_returned'].replace(to_replace = np.nan, value = 'No', inplace = True)
+```
+
+```python
+df_with_returned_data.head(2)
+```
+
+```python
+df_with_returned_data.to_excel('output\orders_with_return_data.xlsx', index = False)
+```
+
+### Sales representative info join with all orders data
+
+Finally, we will join the `sales_reps` sheet data with our combined data (`df_with_returned_data`) by following the same process we followed while joining `returned_orders` data.
+
+```python
+sales_rep = pd.read_excel(file, sheet_name = 1)
+sales_rep.head(2)
+```
+
+```python
+detailed_df = pd.merge(df_with_returned_data, sales_rep, left_on = 'region', right_on = 'Region', how = 'left')
+detailed_df.head(2)
+```
+
+```python
+detailed_df.drop('Region', axis = 1, inplace = True)
+```
+
+```python
+detailed_df.rename(columns = {'Person':'sales_representative'}, inplace = True)
+```
+
+```python
+detailed_df.info()
+```
+
+```python
+detailed_df.head(2)
+```
+
+```python
+detailed_df.to_excel(r'output\final_data_after_combine_and_join.xlsx', index = False)
+```
+
+So we have our final data contained in `detailed_df`, which is a combination of union and join operations. I hope you learned some additional skills based on the `os`, `glob`, and `re` modules, which helped us manage files and filter data efficiently.
+
+Thank you for making it to the end. Happy learning!

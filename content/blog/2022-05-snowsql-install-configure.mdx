@@ -1,0 +1,78 @@
+---
+title: "SnowSQL \u2014 Install and Configure the Snowflake CLI"
+description: "Step-by-step SnowSQL setup on Windows \u2014 install, configure credentials, and verify your first connection."
+date: 2022-05-01
+tags:
+  - Snowflake
+  - SnowSQL
+  - CLI
+category: Snowflake
+draft: false
+---
+
+## Introduction
+
+The command-line interface for Snowflake is called `SnowSQL`. If you are reading this, I'll presume you are already familiar with `Snowflake` and `Snowsight`, i.e., Snowflake's web interface.
+
+Snowsight is a tool that can complete the majority of the tasks. Nonetheless, utilizing SnowSQL may occasionally make some procedures more convenient. Moreover, several operations, like the `GET` and `PUT` commands, can only be carried out via SnowSQL. There are other instances where SnowSQL gets more powerful as well. For instance, using Snowsight, you can load files in stages up to 50 MB in size, whereas with SnowSQL, you don't have any such file size limit.
+
+As a result, it is clear that learning SnowSQL has certain benefits. So, let's explore it thoroughly below.
+
+## SnowSQL: Install
+
+The first step to use SnowSQL is to download and install it. You can download the latest version or any previous version from this official site - [SNOWSQL DOWNLOAD](https://developers.snowflake.com/snowsql/). After downloading, follow the default installation process.
+
+## SnowSQL: Configure
+
+Once the installation is successful, you can verify the installation by running the command in CMD - `snowsql`, which displays the SnowSQL version if things are configured correctly with a default value (which we will do manually soon). 
+
+![Image 1](/images/blog/snowsql-install/img1.png)
+
+Since you haven't configured anything manually yet, it will ask for some optional parameters. 
+
+![Image 2](/images/blog/snowsql-install/img2.png)
+
+Before configuring `SnowSQL [OPTIONS]` from the **config** file, you may optionally add the SnowSQL installation path to Windows Environment Variables so that you can run SnowSQL from any directory. For me, it's the default path, i.e., `C:Program FilesSnowflake SnowSQL`.
+
+Now let's move on to editing the **config** file from `C:\Users\YourName\.snowsql` folder. After opening the file first remove `#` from those lines to which you added a default value. Then add some values to those parameters and those will be used as the default value unless you pass any value for a parameter during runtime.
+
+![Image 3](/images/blog/snowsql-install/img3.png)
+
+## SnowSQL: Use
+
+Now that things are setup, let's try to run SnowSQL and execute some queries. 
+
+- **Start with default values**: `snowsql`
+
+![Image 4](/images/blog/snowsql-install/img4.png)
+
+In the above snapshot, we've logged in to the default account with the default username and password. These values are taken from the **config** file we just edited. There is no prompt to enter the password, as it's taken from the configuration file as well. 
+
+In `YOUR_USERNAME#COMPUTE_WH@TECHNICAL_BLOG_DB.PYTHON_SCHEMA`, the values are `<username#warehousename@dbname.schemaname>` respectively. 
+
+- **Overwrite default values**: `snowsql -w=MEDIUM_WAREHOUSE -d=SNOWFLAKE_SAMPLE_DATA -s=TPCH_SF100`
+
+![Image 5](/images/blog/snowsql-install/img5.png)
+
+In the above snap, we can see that instead of default options, we are now connected to warehouse: `MEDIUM_WAREHOUSE`, database: `SNOWFLAKE_SAMPLE_DATA` and schema: `TPCH_SF100`.
+
+For more details on parameter flags, [Connection Parameters](https://docs.snowflake.com/en/user-guide/snowsql-start)
+
+- **Write SQL Queries**: `SELECT * FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF100.CUSTOMER LIMIT 5;`
+
+![Image 6](/images/blog/snowsql-install/img6.png)
+
+In the above snap, we have selected 5 rows from the `Customer` table by overwriting the default options mentioned in the earlier step.
+
+We can perform other DDL and DML statements from SnowSQL too. Since it's a CLI, most individuals might prefer to write small SQL queries in SnowSQL and long SQL queries in Snowsight.
+
+## Conclusion
+
+By the way, I am using [Cmder Full Version](https://cmder.app/) instead of Windows default CMD or PowerShell. I found its GUI better and that it supports multi-tabs as well.
+
+That's all for today's introductory blog on installing and configuring SnowSQL. I hope it's helpful, and I look forward to seeing you in another of my writings. For more on SnowSQL - 
+
+- [Getting Started with SnowSQL](https://quickstarts.snowflake.com/guide/getting_started_with_snowsql/#0)
+- [SnowSQL (CLI Client)](https://docs.snowflake.com/en/user-guide/snowsql)
+
+Happy learning!

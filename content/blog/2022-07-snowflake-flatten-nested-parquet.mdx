@@ -1,0 +1,245 @@
+---
+title: "Flatten Nested Parquet in Snowflake via Local Stage"
+description: "Stage Parquet files from your local drive into Snowflake and flatten semi-structured columns for analysis."
+date: 2022-07-01
+tags:
+  - Snowflake
+  - Parquet
+  - ETL
+category: Snowflake
+draft: false
+---
+
+## Introduction
+
+Snowflake is a popular cloud-based data warehouse platform. Loading semi-structured data like JSON, Parquet, etc. into Snowflake can be accomplished using various methods, depending on specific requirements. 
+
+In this article, we will see how we can use Python to download a Parquet file from a public s3 bucket and use SnowSQL to load the downloaded Parquet file from our local drive to a Snowflake stage. Once the file is staged, we will flatten the file into tabular format and finally store the flat data in a relational table.
+
+## Optional Steps
+
+You can download the converted JSON to Parquet file straight from [Kaggle Datasets](https://www.kaggle.com/datasets/maf345/employees-nested-parquet-data), if you don't want to follow the below optional steps. After that you're good to continue from [Prerequisites](#Prerequisites) section.
+
+### Optional Step 1: Parquet File Download
+
+You have to download the JSON file from this open S3 bucket at [s3:/snowflakeparquetdemo](s3:/snowflakeparquetdemo) if you like to follow along with me. The Python code listed below will be used to save the file to our local drive.
+
+```python
+import boto3
+from botocore import UNSIGNED
+from botocore.config import Config
+
+bucket_name = 'your-bucket-name' 
+bucket_file_name = 'HR_data.json' 
+output_path = 'C:\\path\\to\\s3_employees_data.json'
+
+s3 = boto3.resource('s3', config = Config(signature_version = UNSIGNED))
+
+try:
+    s3.Bucket(bucket_name).download_file(bucket_file_name, output_path)
+    print('File downloaded at: {0}'.format(output_path))
+
+except Exception as e: 
+    print(e)
+```
+
+You might be wondering why a JSON file was downloaded rather than a Parquet one. This is due to its outstanding nested structure, and unfortunately the same file was not available in Parquet format elsewhere. 
+
+I've searched for a similar nested Parquet file, but unfortunately couldn't find a better one. This JSON file caught my attention in a [Snowflake Udemy Course](https://www.udemy.com/course/snowflake-masterclass/).
+
+### Optional Step 2: Manual Modifications of the JSON file
+
+The JSON file is now avaiable in our local drive which contains multiple lines and need below manual modifications - 
+
+1. Open the file in any text editor and enclose all the lines within a bracket `[...]` in order to avoid [ValueError: Trailing data](https://sebhastian.com/python-valueerror-trailing-data/).
+
+2. Visit any [JSONFormatter](https://jsonformatter.org/) website in order to remove all whitespaces by compacting the JSON as one-liner. 
+
+![Image 1](/images/blog/snowflake-flatten-parquet/img1.png)
+
+If we stage our Parquet file without following Step 2 (one-liner compacting), all the whitespaces will be replaced by `backslash '\'` in the staged file, which will cause errors in the later steps. 
+
+![Image 1](/images/blog/snowflake-flatten-parquet/img1-1.png)
+
+### Optional Step 3: Convert JSON file into Parquet Format
+
+```python
+import pandas as pd
+
+path = 'C:\\path\\to\\s3_employees_data.json'
+df = pd.read_json(path)
+
+df.head(3)
+```
+
+```python
+path = 'C:\\path\\to\\s3_employees_data.parquet'
+
+df.to_parquet(path, index = False)
+```
+
+### Optional Step 4: Verify the Parquet Conversion
+
+Reading the Parquet file to check whether the conversion was successful or not.
+
+```python
+df = pd.read_parquet('D:\Projects\Blog\Snowflake\_data\parquet\s3_employees_data.parquet')
+df.head(3)
+```
+
+## Prerequisites
+
+In order to stage the converted Parquet file into a Snowflake stage, we have to use `PUT` command and `PUT` command is supported only using SnowSQL. If SnowSQL is not installed and configured in your machine, you may follow my blog on - **SnowSQL - Install and Configure Snowflake CLI**
+
+Additional resources on SnowSQL by Snowflake - 
+
+- [Getting Started with SnowSQL](https://quickstarts.snowflake.com/guide/getting_started_with_snowsql/#0)
+- [SnowSQL (CLI Client)](https://docs.snowflake.com/en/user-guide/snowsql)
+
+## Flattening Process: Step by Step
+
+Below is the step-by-step process for flattening parquet data:
+
+## Step 1: SnowSQL Login
+
+I'll be using SnowSQL to run most of the codes. If you prefer, you may run all these codes in Snowsight, except [Step 4: Put file into Stage](#Step-4:-Put-file-into-Stage), which requires SnowSQL to run.
+
+Let's start by opening SnowSQL in your favorite terminal. I'm using [Cmder](https://cmder.app/) (full version), a popular open source console emulator for Windows.
+
+We will start by starting SnowSQL with default parameters by writing `snowsql` in the terminal. 
+
+![Image 2](/images/blog/snowflake-flatten-parquet/img2.png)
+
+In your case, the database *TECHNICAL_BLOG_DB* and the schema *SNOWSQL_SCHEMA* might not be available. You can create a database/schema by running 
+> `CREATE DATABASE TECHNICAL_BLOG_DB` and `CREATE SCHEMA SNOWSQL_SCHEMA`.  
+
+The default *PYTHON_SCHEMA* is not the one we will be using in this article. We will use a schema called *SNOWSQL_SCHEMA* by running command 
+> `USE SCHEMA SNOWSQL_SCHEMA`
+
+![Image 3](/images/blog/snowflake-flatten-parquet/img3.png)
+
+Now that we are in the right database and schema, we are good to follow the next steps.
+
+## Step 2: Create File Format
+
+We will run the below command to create a *File Format* object named *PARQUETFORMAT* of type PARQUET. 
+
+```sql
+CREATE OR REPLACE file format PARQUETFORMAT TYPE = PARQUET;
+```
+
+![Image 4](/images/blog/snowflake-flatten-parquet/img4.png)
+
+## Step 3: Create Stage
+
+Now we will create a stage *PARQUETSTAGE* with the file format object we just created. 
+
+```sql
+CREATE OR REPLACE stage PARQUETSTAGE FILE_FORMAT = PARQUETFORMAT;
+```
+
+![Image 5](/images/blog/snowflake-flatten-parquet/img5.png)
+
+## Step 4: Put file into Stage
+
+We will use SnowSQL to stage Parquet file from local drive into Snowflake stage *PARQUETSTAGE*. 
+
+```sql
+PUT file://D:\Projects\Blog\Snowflake\_data\parquet\s3_employees_data.parquet @PARQUETSTAGE; 
+```
+
+![Image 6](/images/blog/snowflake-flatten-parquet/img6.png)
+
+In the status column we can see that the file was uploaded successfully. We can also confirm by running `LIST @PARQUETSTAGE;` command. 
+
+![Image 7](/images/blog/snowflake-flatten-parquet/img7.png)
+
+## Step 5: Copy Parquet data into Table
+
+We will first create a table with only one column of *VARIANT* type. 
+
+```sql
+CREATE OR REPLACE table SAMPLE_PARQUET_RAW (RAW_DATA variant);
+```
+
+![Image 8](/images/blog/snowflake-flatten-parquet/img8.png)
+
+After that we will COPY the Parquet data from *PARQUETSTAGE* into the snowflake table *SAMPLE_PARQUET_RAW* we just created. 
+
+```sql
+COPY INTO SAMPLE_PARQUET_RAW 
+FROM @PARQUETSTAGE 
+file_format = PARQUETFORMAT 
+files = ('s3_employees_data.parquet');
+```
+
+![Image 9](/images/blog/snowflake-flatten-parquet/img9.png)
+
+In order to preview the data after successful copying we need to run below command. 
+
+```sql
+SELECT * FROM SAMPLE_PARQUET_RAW LIMIT 2;
+```
+
+![Image 10](/images/blog/snowflake-flatten-parquet/img10.png)
+
+## Step 6: Flatten Parquet data and Insert into Table
+
+We will run the below code to flatten the complete sample Parquet data and store it in a relational table. 
+
+```sql
+CREATE OR REPLACE TABLE sample_parquet_flattened AS
+    SELECT
+        raw_data:id::int AS id,
+        raw_data:first_name::string AS first_name,
+        raw_data:last_name::string AS last_name,
+        raw_data:gender::string AS gender,
+        raw_data:city::string AS city,
+        
+        raw_data:job.title::string AS job_title,
+        raw_data:job.salary::string AS salary,
+
+        l.value:language::string AS spoken_languages,
+        l.value:level::string AS language_level,
+
+        c.value::string AS previous_company
+
+    FROM SAMPLE_PARQUET_RAW,
+    -- table(flatten(raw_data:prev_company, OUTER => TRUE)) c,
+    lateral flatten ( input => raw_data:prev_company, OUTER => TRUE ) c,
+    lateral flatten ( input => raw_data:spoken_languages, OUTER => TRUE ) l;
+```
+
+Remember to select the right database and warehouse in Snowsight (highlighted in yellow) before executing the code. Otherwise you need to give fully qualified table name like `TECHNICAL_BLOG_DB.SNOWSQL_SCHEMA.SAMPLE_PARQUET_RAW` and `TECHNICAL_BLOG_DB.SNOWSQL_SCHEMA.SAMPLE_PARQUET_FLATTENED`.
+
+![Image 11](/images/blog/snowflake-flatten-parquet/img11.png)
+
+You might have noticed that there is a commented line of code `-- table(flatten(raw_data:prev_company, OUTER => TRUE)) c`. 
+
+Basically **table flatten** and **lateral flatten** will produce the same output. So you may consider any of these two.
+
+## Step 7: Preview Flattened Data
+
+We can now preview the flattened data by querying the table. 
+
+```sql
+SELECT * FROM TECHNICAL_BLOG_DB.SNOWSQL_SCHEMA.SAMPLE_PARQUET_FLATTENED LIMIT 5;
+```
+
+![Image 12](/images/blog/snowflake-flatten-parquet/img12.png)
+
+Rows count before flatten:
+
+![Image 13](/images/blog/snowflake-flatten-parquet/img13.png)
+
+Rows count after flatten:
+
+![Image 14](/images/blog/snowflake-flatten-parquet/img14.png)
+
+So there are 672 - 200 = 472 rows which gets duplicated because of array `prev_company` and `spoken_languages` which contain multiple items for those rows in the Parquet raw data.
+
+## Conclusion
+
+I am aware that we are storing all the column data in a single table. Hence, many columns of data are being duplicated. Therefore, normalization is necessary for storage and query performance enhancement. But that part is not being considered here, as the sole purpose of this article is to show readers how to flatten nested Parquet and stage Parquet files from local drives.
+
+I appreciate you reading all the way through this article. I sincerely hope it was useful, and I can't wait to see you again. Happy learning!

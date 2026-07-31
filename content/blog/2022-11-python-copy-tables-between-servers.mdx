@@ -1,0 +1,370 @@
+---
+title: "Copy Table Data Between Database Servers with Python"
+description: "Move tables from one database server to another for dev/test \u2014 connection setup, chunked reads, and bulk writes."
+date: 2022-11-01
+tags:
+  - Python
+  - SQL
+  - ETL
+category: Python
+draft: false
+---
+
+## Introduction
+
+Copying data from one server to another is an important part when it comes to development and testing. In this blog, we will see how we can copy all or selected tables data from one server to another using Python. 
+
+We will see two processes for the below two cases as examples: 
+
+- Copy selected tables data from **PostgreSQL to Snowflake**
+- Copy selected tables data from **SQL Server to PostgreSQL**
+
+## Library Import
+
+We will start by importing the necessary libraries. If any of the below libraries are not available on your system, you can install them by executing `conda install library_name` or `pip install library_name` in the terminal, depending on whether you are using the `anaconda distribution` or `regular python distribution`.
+
+```python
+import pandas as pd
+import sqlalchemy as sqa
+from tqdm.auto import tqdm
+from snowflake.sqlalchemy import URL
+```
+
+## Create Database Connection
+
+A database engine is necessary for secure and authenticated access to databases. It provides flexibility by allowing easy configuration of various connection parameters, facilitating seamless switching between different databases or server environments. The engine's built-in error handling mechanisms ensure robustness and stability in the face of database-related issues.
+
+We will use one popular Python library, namely `SQLAlchemy` to create a database engine and interact with databases.
+
+### SQL Server
+
+```python
+username = 'your_username'
+password = 'your_password'
+host = 'YOUR-SQL-SERVER'
+port = '1433'
+database = 'AdventureWorks2022'
+
+url = 'mssql+pymssql://{0}:{1}@{2}:{3}/{4}'.format(username, password, host, port, database)
+sql_server_engine = sqa.create_engine(url)
+sql_server_engine
+```
+
+### MySQL
+
+```python
+username = 'root'
+password = 'your_password'
+host = 'localhost'
+port = '3306'
+database = 'technical_blog_db'
+
+url = 'mysql+pymysql://{0}:{1}@{2}:{3}/{4}'.format(username, password, host, port, database)
+mysql_engine = sqa.create_engine(url)
+mysql_engine
+```
+
+### PostgreSQL
+
+```python
+username = 'postgres'
+password = 'your_password'
+host = 'localhost'
+port = '5432'
+database = 'airline_flights_medium'
+
+url = 'postgresql+psycopg2://{0}:{1}@{2}:{3}/{4}'.format(username, password, host, port, database)
+postgres_engine = sqa.create_engine(url)
+postgres_engine
+```
+
+```python
+username = 'postgres'
+password = 'your_password'
+host = 'localhost'
+port = '5432'
+database = 'adventure_works_2022'
+
+url = 'postgresql+psycopg2://{0}:{1}@{2}:{3}/{4}'.format(username, password, host, port, database)
+postgres_engine_2 = sqa.create_engine(url)
+postgres_engine_2
+```
+
+### Snowflake
+
+```python
+snowflake_engine = sqa.create_engine(URL(
+    account = 'xy12345.us-east-1',
+    user = 'your_username',
+    password = 'your_password',
+    database = 'technical_blog_db',
+    warehouse = 'etl_warehouse',
+    role='accountadmin'
+))
+
+snowflake_engine
+```
+
+## Copy Tables Data: Source to Destination 
+
+We will demonstrate the below two process - 
+- PostgreSQL to Snowflake
+- SQL Server to PostgreSQL
+
+### PostgreSQL to Snowflake
+
+As a part of the demonstration process, we will first see how we can copy selected PostgreSQL tables data from any schema of a particular database and write that data into a Snowflake database with the same schema name and table name.
+
+Below is a general function that first gets all schema and table names from any selected PostgreSQL database and then excludes any user-provided exclusion list of schemas and tables. 
+
+So the final output is the list of tables whose data will be copied from source server to destination server (in this case PostgreSQL to Snowflake).
+
+```sql
+def postgres_tables_selection(engine_name, exclusion_list):
+    query = """
+        SELECT
+            table_schema AS schema_name,
+            table_name AS table_name,
+            CONCAT(table_schema, '.', table_name) AS table_full_name 
+
+        FROM information_schema.tables 
+        WHERE table_schema IN (
+            SELECT 
+                schema_name
+            FROM information_schema.schemata
+            WHERE 
+                schema_name NOT LIKE 'pg_%%'
+                AND schema_name NOT IN ('information_schema')
+            )
+        ORDER BY 1, 2;
+    """
+    
+    all_tables_with_schema = pd.read_sql(sql = query, con = engine_name)
+    
+    excluded_tables = excluded_tables_list
+    selected_tables_with_schema = all_tables_with_schema[~all_tables_with_schema['table_full_name'].isin(excluded_tables)]
+    
+    return selected_tables_with_schema
+```
+
+```python
+excluded_tables_list = ['bookings.aircrafts',
+                        'bookings.aircrafts_data',
+                        'bookings.airports_data',
+                        'bookings.airports',
+                        'bookings.boarding_passes',
+                        'bookings.flights_copy',
+                        'bookings.flights_copy',
+                        'bookings.flights_v',
+                        'bookings.routes',
+                        'bookings.seats_copy',
+                        'bookings.tickets',
+                        'dvd_rental.actor_info',
+                        'dvd_rental.customer_list',
+                        'dvd_rental.film',
+                        'dvd_rental.film_copy',
+                        'dvd_rental.film_list',
+                        'dvd_rental.nicer_but_slower_film_list',
+                        'dvd_rental.sales_by_film_category',
+                        'dvd_rental.sales_by_store',
+                        'dvd_rental.staff',
+                        'dvd_rental.staff_list',
+                        'public.film_copy'
+                       ]
+
+selected_tables = postgres_tables_selection(engine_name = postgres_engine, exclusion_list = excluded_tables_list)
+
+selected_tables.info()
+```
+
+```python
+selected_tables.head(2)
+```
+
+We are creating all source schemas on the destination server in the first place. Otherwise, the table data copy process will fail.
+
+```sql
+for i in selected_tables['schema_name'].unique():
+    query = 'CREATE SCHEMA IF NOT EXISTS {0};'.format(i)
+    snowflake_engine.execute(query)
+
+print('Successfully created schemas if not exists already!')
+```
+
+```sql
+def postgres_to_snowflake(schema_name, table_name, source_engine = postgres_engine, destination_engine = snowflake_engine):
+    
+    try:
+        query = 'SELECT * FROM {0}.{1}'.format(schema_name, table_name)
+    
+        df = pd.read_sql(sql = query, con = source_engine)
+
+        df.to_sql(
+            name = table_name,
+            schema = schema_name,
+            con = destination_engine,
+            if_exists = 'replace',
+            index = False,
+            method = 'multi',
+            chunksize = 10000
+        )
+            
+        print('Successfully inserted {0} rows in table ({1}.{2})!'.format(df.shape[0], schema_name, table_name))
+    
+    except Exception as error:
+        print('Migration failed for table -> {0}.{1}'.format(schema_name, table_name))
+        print(type(error).__name__, "–", error)
+```
+
+```python
+for index, row in tqdm(selected_tables.iterrows(), total = selected_tables.shape[0], desc = 'Overall Progress'):
+    
+    postgres_to_snowflake(schema_name = row[0], table_name = row[1])
+    
+    print('\n**********************************************************************\n')
+    
+print('Successfully copied selected {0} tables data from Postgres server to Snowflake server!'.format(selected_tables.shape[0]))
+```
+
+We have successfully copied some really large tables. One of them is `bookings.ticket_flights`, which has more than 2.36 million records! Awesome work, that's it!
+
+### SQL Server to PostgreSQL
+
+We will now see how we can copy selected SQL Server tables data from any schema of a particular database and write that data into a PostgreSQL database with the same schema name and table name.
+
+Below is a general function that first gets all schema and table names from any selected SQL Server database and then excludes any user-provided exclusion list of schemas and tables. 
+
+So the final output is the list of tables whose data will be copied from source server to destination server i.e. SQL Server to PostgreSQL in this case.
+
+```sql
+def sqlserver_tables_selection(engine_name, exclusion_list):
+    query = """
+        SELECT 
+            table_schema AS schema_name,
+            table_name AS table_name,
+            CONCAT(table_schema, '.', table_name) AS table_full_name
+
+        FROM INFORMATION_SCHEMA.TABLES
+
+        WHERE 
+            table_name NOT IN ('sysdiagrams')
+
+        ORDER BY 
+            schema_name, table_name
+    """
+    
+    all_tables_with_schema = pd.read_sql(sql = query, con = engine_name)
+    
+    excluded_tables = excluded_tables_list 
+    selected_tables_with_schema = all_tables_with_schema[~all_tables_with_schema['table_full_name'].isin(excluded_tables)]
+    
+    return selected_tables_with_schema
+```
+
+```python
+excluded_tables_list = ['dbo.AWBuildVersion', 
+                        'HumanResources.Shift',
+                        'Person.StateProvince',
+                        'Person.vStateProvinceCountryRegion',
+                        'Production.BillOfMaterials',
+                        'Production.ProductModelProductDescriptionCulture',
+                        'Production.ScrapReason',
+                        'Production.vProductModelInstructions',
+                        'Purchasing.vVendorWithAddresses',
+                        'Sales.SalesTaxRate',
+                        'Sales.ShoppingCartItem'
+                       ]
+
+selected_tables = sqlserver_tables_selection(engine_name = sql_server_engine, exclusion_list = excluded_tables_list)
+
+selected_tables.info()
+```
+
+```python
+selected_tables.head(2)
+```
+
+We are performing an additional step below in this case, as the naming convention of PostgreSQL is slightly different from SQL Server (lower case instead of camel case). If we don't do it manually, PostgreSQL will perform this conversion automatically, which later in our code will cause an error. Hence, we are performing this step ahead in order to avoid any future errors.
+
+```python
+selected_tables['schema_name'] = selected_tables['schema_name'].str.lower()
+selected_tables['table_name'] = selected_tables['table_name'].str.lower()
+selected_tables['table_full_name'] = selected_tables['table_full_name'].str.lower()
+```
+
+```sql
+for i in selected_tables['schema_name'].unique():
+    query = 'CREATE SCHEMA IF NOT EXISTS {0};'.format(i)
+    postgres_engine_2.execute(query)
+
+print('Successfully created schemas if not exists already!')
+```
+
+```sql
+def sqlserver_to_postgres(schema_name, table_name, source_engine = sql_server_engine, destination_engine = postgres_engine_2):
+    
+    try:
+        query = 'SELECT * FROM {0}.{1}'.format(schema_name, table_name)
+    
+        df = pd.read_sql(sql = query, con = source_engine)
+
+        df.to_sql(
+            name = table_name,
+            schema = schema_name,
+            con = destination_engine,
+            if_exists = 'replace',
+            index = False,
+            method = 'multi',
+            chunksize = 10000,
+            dtype = {
+                'model': sqa.types.JSON
+
+            }
+        )
+            
+        print('Successfully inserted {0} rows in table ({1}.{2})!'.format(df.shape[0], schema_name, table_name))
+    
+    except Exception as error:
+        print('Migration failed for table -> {0}.{1}'.format(schema_name, table_name))
+        print(type(error).__name__, "–", error)
+```
+
+```python
+for index, row in tqdm(selected_tables.iterrows(), total = selected_tables.shape[0], desc = 'Overall Progress'):
+    
+    sqlserver_to_postgres(schema_name = row[0], table_name = row[1])
+    
+    print('\n**********************************************************************\n')
+    
+print('Successfully copied selected {0} tables data from SQL server to PostgreSQL server!'.format(selected_tables.shape[0]))
+```
+
+We've successfully copied 80 tables data from one server to another server in less than 4 minutes!
+
+## Limitations
+
+Although the demonstrated process comes handy in many use cases, it still has a few limitations.
+
+One major limitation is that, it can't get table schema (Table DDL) from the source database. Hence, in the destination database, there might be datatype mismatch issue for some columns. So use this process in cases when column data types are not an issue for you. Rather copying table data is more important to you or you will perform incremental refresh. In order to overcome this, first you need to create a table DDL on the destination server and perform the 'append' operation instead of 'replace' in the `if_exists` parameter of the `df.to_sql()` function.
+
+Another limitation is that, often relational database tables have integrities, relations, key definitions, etc. The process is not aware of these, and none of these are copied to the destination server. It only copies table data from the source server to the destination server.
+
+Moreover, there are a few tables that have some special data types like JSON, bytea, etc. Those cases need separate treatment in order to work. Since we are demonstrating a general process, any tables with such exceptions are placed into the `excluded_tables_list` list for the sake of the blog.
+
+## Resources
+
+Below are some sites where you can get some publicly available dummy data. You can import these data into any database server and play with it using python. 
+
+#### Common Platforms:
+- [IMDb Non-Commercial Datasets](https://developer.imdb.com/non-commercial-datasets/#plain)  
+- [IMDb Non-Commercial Datasets - TSV format](https://datasets.imdbws.com/)
+- [Sample HR Database](https://www.sqltutorial.org/sql-sample-database/)
+
+#### PostgreSQL demo DB:
+- [Airline Flights - PostgreSQL demo database](https://www.postgresqltutorial.com/postgresql-getting-started/postgresql-sample-database/)
+
+#### SQL Server demo DB:
+- [Multiple demo dbs](https://www.sqlskills.com/sql-server-resources/sql-server-demos/)
+- [Adventureworks demo db](https://learn.microsoft.com/en-us/sql/samples/adventureworks-install-configure?view=sql-server-ver16&tabs=ssms)
+
+Thank you for making it to the end. Hope this was helpful and I look forward to seeing you in another of my writing. Happy learning!

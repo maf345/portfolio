@@ -1,0 +1,159 @@
+---
+title: Excel Macros That Save Hours — Hide Sheets & Send Reports in One Click
+description: Two VBA macros for daily analyst work — toggle very-hidden sheets by tab color, and draft Outlook emails with the workbook attached and body populated from a template sheet.
+date: 2022-03-01
+tags:
+  - Excel
+  - VBA
+  - Automation
+category: Excel
+draft: false
+---
+
+Excel macros are great for automating repetitive tasks and extending what the app does out of the box. Here are two custom macros I rely on — one for hiding calculation sheets, one for drafting recurring report emails.
+
+I'm not a macro expert. A former colleague got me started, and the email macro below is something I learned from him directly. Sharing it here in case it helps your day-to-day work too.
+
+## Macros in this post
+
+1. **Hide or unhide multiple Excel sheets at once** — by yellow tab color
+2. **One-click email send** — to selected recipients, with the workbook attached
+
+Copy the code into your `PERSONAL.XLSB` file. If you don't have one yet, [this tutorial shows how to create it](https://youtu.be/asfquqxa3JY).
+
+Once set up, your personal macro workbook will look something like this (you can ignore the other code in the screenshot for now):
+
+![PERSONAL.XLSB module view with macro code](/images/blog/excel-macros/image-1.png)
+
+## Hide or unhide multiple Excel sheets at once
+
+Analysts and accountants often keep helper sheets for calculations, metadata, or staging — sheets stakeholders don't need to see. Hiding and unhiding them manually is slow and easy to forget.
+
+This macro toggles every sheet whose tab color matches a defined yellow (`65535`), switching between visible and **very hidden** (`xlSheetVeryHidden`).
+
+### Code
+
+```vb
+CONST TABCOLOR AS LONG = 65535
+'65535 is the color code for Yellow
+
+Sub VeryHidden_Hide_Unhide_Toggle()
+
+'Hide all sheets with yellow colored tab (if currently visible)
+'Unhide all sheets with yellow colored tab (if currently invisible)
+
+Dim ws As Object
+'Use object instead of Worksheet
+
+  'Loop through sheets and hide/unhide yellow tabs
+  For Each ws In ActiveWorkbook.Sheets
+    If ws.Tab.Color = TABCOLOR Then
+        If ws.Visible = xlSheetVeryHidden Then
+            ws.Visible = xlSheetVisible
+        Else
+            ws.Visible = xlSheetVeryHidden
+        End If
+    End If
+  Next ws
+
+End Sub
+```
+
+### Running the macro
+
+**Step 1:** Open the workbook where you want to run the macro. If Excel shows *Macros have been disabled*, click **Enable Content**.
+
+![Excel security warning — enable macros](/images/blog/excel-macros/image-2.png)
+
+**Step 2:** Below is a preview of the sheets currently visible to stakeholders.
+
+![Visible sheet tabs before running the macro](/images/blog/excel-macros/image-3.png)
+
+**Step 3:** Open the macro list via **View → Macros → View Macros**, or press **Alt + F8**.
+
+![View Macros dialog shortcut](/images/blog/excel-macros/image-4.png)
+
+**Step 4:** Select `VeryHidden_Hide_Unhide_Toggle` from `PERSONAL.XLSB` and click **Run**.
+
+![Selecting the hide/unhide macro](/images/blog/excel-macros/image-5.png)
+
+**Step 5:** Yellow-tab sheets appear immediately. Run the same macro again to hide them.
+
+![Sheets with yellow tabs now visible](/images/blog/excel-macros/image-6.png)
+
+## One-click email send to selected recipients
+
+When you send the same report on a schedule — daily, weekly, monthly — most fields are predictable: recipients, subject, body range, attachment. A macro can open a pre-filled Outlook draft so you only review and hit Send.
+
+This example attaches the active workbook, pulls the subject from cell `D1`, the body from range `D2:M40`, and the sender name from document properties (useful for automating the *Regards* line).
+
+### Code
+
+```vb
+Sub Daily_Sales_Report()
+
+ActWB = ActiveWorkbook.Name
+ActWBP = ActiveWorkbook.Path
+ActiveWorkbook.Save
+
+ActiveWorkbook.Sheets("Email").Visible = True
+ActiveWorkbook.Sheets("Email").Activate
+
+Range("D34") = ActiveWorkbook.BuiltinDocumentProperties("Last Author")
+'This line dynamically generate name. Helpful for email Regards section automation
+
+ActiveSheet.Range("D2:M40").Select
+'The range we want to show in email body
+
+With ActiveSheet.MailEnvelope
+
+    .Item.To = "karim@domain.com"
+    .Item.CC = "john@domain.com; george@domain.com"
+    .Item.BCC = ""
+    .Item.Subject = Sheets("Email").Range("D1")
+    'Email subject taken from content present in this cell
+
+     att = ActWBP & "\" & ActWB
+
+    .Item.Attachments.Add att
+
+    .Item.SentOnBehalfOfName = "mehedi.farazi@domain.com"
+    'Email sent from which ID. Helpful if you have multiple email configured.
+
+    .Item.Save
+    .Item.Display
+
+End With
+
+ActiveWorkbook.Close SaveChanges:=False
+
+End Sub
+```
+
+Replace the `To`, `CC`, `SentOnBehalfOfName`, sheet name, and cell ranges with your own setup.
+
+### Running the macro
+
+**Step 1:** Open the workbook and enable macros if prompted.
+
+![Excel security warning — enable macros](/images/blog/excel-macros/image-2.png)
+
+**Step 2:** The `Email` sheet defines what goes into the draft — subject in `D1`, body in `D2:M40`, sender name in `D34` via built-in document properties.
+
+![Email template sheet layout](/images/blog/excel-macros/image-7.png)
+
+**Step 3:** Open macros with **Alt + F8** or **View → Macros → View Macros**.
+
+![View Macros dialog](/images/blog/excel-macros/image-4.png)
+
+**Step 4:** Select `Daily_Sales_Report` and click **Run**.
+
+![Selecting the email macro](/images/blog/excel-macros/image-8.png)
+
+**Step 5:** Outlook opens a draft in your **Drafts** folder with the attachment and populated body. Review and send. In this example, *Mehedi* was pulled automatically from document properties.
+
+![Generated Outlook email draft](/images/blog/excel-macros/image-9.png)
+
+---
+
+Hope this was useful. More posts from the archive coming soon — Python, Snowflake, and Tableau notes are next in the queue.

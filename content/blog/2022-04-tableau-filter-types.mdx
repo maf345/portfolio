@@ -1,0 +1,93 @@
+---
+title: "Filter Types in Tableau \u2014 Order of Operations Explained"
+description: "Extract, data source, context, dimension, measure, and table calculation filters \u2014 what each does and when to use it."
+date: 2022-04-15
+tags:
+  - Tableau
+  - BI
+  - Filters
+category: Tableau
+draft: false
+---
+
+# Filter Types in Tableau
+
+**Tableau** is a powerful and widely used data visualization and business intelligence tool that allows you to explore, analyze, and present data in an intuitive and interactive way. It enables you to connect to various data sources, including databases, spreadsheets, cloud services, and more. Once connected, you can easily transform and manipulate the data, create visualizations, and build interactive dashboards and reports. 
+
+**Filtering** is the process of selectively extracting or excluding specific data records or subsets of data based on defined criteria. Filtering allows you to focus on a specific portion of your data that is relevant to your analysis or reporting needs, while temporarily or permanently excluding other data points.
+
+There are mainly six types  of filters in Tableau. Filters are executed in the following **order of operations** - 
+1. Extract Filter
+2. Data Source Filter
+3. Context Filter
+4. Dimension Filter
+5. Measure Filter 
+6. Table Calculation Filter
+
+## Extract Filter
+
+- An extract filter is applied to the data after it has been extracted from the original data source and stored in Tableau's proprietary .hyper format.
+- They are beneficial when working with large data sets, as they allow you to focus on a subset of the data that is relevant to your analysis.
+- It can be used to filter data based on dimensions, measures, or both.
+- It can be used to improve performance as it reduce the amount of data that Tableau loads into memory.
+
+#### Use Case: 
+You have a large sales dataset containing millions of records from different regions. You want to create a Tableau dashboard to analyze sales performance by region, but you require a specific region or subset of regions. So use can apply an extract filter to limit the data in the extract to the required region(s) only. 
+
+## Data Source Filter
+
+- A data source filter is applied to the data source itself. 
+- Data source filters are useful when you want to limit the data that is available for analysis from the beginning, without loading unnecessary data into memory.
+- If you need to restrict access to certain data based on user permissions or security requirements, data source filters are often more appropriate. Thus you ensure that sensitive information is excluded from the analysis even after publishing dashboard.
+
+#### Use Case: 
+You have an HR dataset containing employee records for a multinational company. You want to create a Tableau dashboard to analyze employee performance metrics, but you only want to include active employees for the current year. You can apply a data source filter to exclude inactive employees and limit the data to the current year only.
+
+## Context Filter
+
+- A context filter is a special type of filter that defines a temporary subset of data based on selected dimensions and measures.
+- When you apply a context filter, Tableau creates a separate query using only the data that matches the filter criteria and this filtered subset becomes the context for all subsequent calculations and visualizations within the context.
+- Since context filters create a temporary subset of data that affects the entire workbook instead of a single worksheet, it can improve performance for large datasets.
+
+#### Use Case:
+
+You have a Superstore dataset which contains sales records based on orders placed by customers throughout the year along with other additional details like product category and sub-category. You want to see what are the top 4 product sub-categories within one or more selected product categories based on sales value. 
+
+For this you need to create a Measure Filter (we will discuss later) based on product sub-categories which filters top four sub-categories based on `SUM(sales)`. Now you need to create a Dimension Filter (we will discuss later) based on product category and add this dimension filter to context by right clicking on the dimension name and select `Add to Context` from menu. After that the filter color will change from Blue to Gray which indicates that the filter is now active as a Context Filter. 
+
+## Dimension Filter
+
+- A dimension filter in Tableau is used to filter data based on the values specific to a dimension. 
+- It allows you to include or exclude specific dimension members from your visualizations.
+
+#### Use Case:
+
+You work for a retail company that sells a wide range of products across different categories such as electronics, clothing, home decor, and appliances. 
+
+For example, you may choose to include only the "Electronics" and "Clothing" categories. In that case you need to drag `Category` column in the filter pane and select "Electronics" and "Clothing" from the list of available values. 
+
+## Measure Filter
+
+- Measure filter in tableau is applied to quantitative fields. You can add operations like sum, mean, standard deviation, and other aggregated functions in the measure filter.
+- Measure filters allow you to focus on specific subsets of data based on the numerical values of measures, helping you analyze specific ranges or segments.
+
+#### Use Case:
+
+You have a dataset of sales transactions with product names, sales amounts, and regions. You want to identify the top-performing products based on sales amount.
+
+Apply a measure filter to include only the top N products with the highest sales amount. This filter will dynamically adjust to show the products with the highest sales, allowing you to focus on the top performers and analyze their performance in more detail.
+
+## Table Calculation Filter
+
+- A table calculation filter is a powerful tool that allows you to apply filters to the results of table calculations. 
+- Table calculations are used when creating calculated fields such as RUNNING_TOTAL, PERCENT_OF_TOTAL etc.
+
+#### Use Case:
+
+You have a dataset of monthly sales data for multiple years. You want to analyze the year-over-year sales growth for each month and highlight only the months where the sales growth exceeds a certain threshold.
+
+You can use the "Difference" table calculation to calculate the difference between the sales amount of the current year and the previous year. Apply a table calculation filter to include only the months where the year-over-year sales growth exceeds a certain threshold e.g. only positive growth greater than 10%.
+
+These are the six main types of filters available in Tableau. 
+
+---

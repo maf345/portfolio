@@ -1,0 +1,364 @@
+---
+title: "Read and Write Data to Popular Databases with Python"
+description: "Connect to MySQL, PostgreSQL, SQL Server, and SQLite with Python \u2014 read queries into DataFrames and write results back."
+date: 2022-10-01
+tags:
+  - Python
+  - SQL
+  - Databases
+category: Python
+draft: false
+---
+
+## Introduction
+
+Reading and writing data from common relational databases using Python is vital for data access, real-time decision-making, and data integration. Python's capability to interact with databases enables efficient automation and improved application development, making it an indispensable tool for data analysis and seamless information exchange between systems.
+
+## Import Necessary Library
+
+We will start by importing the necessary libraries. If any of the below libraries are not available on your system, you can install them with `conda install <library_name>` or `pip install <library_name>`, depending on whether you are using the `anaconda distribution` or not.
+
+```python
+import re
+import os
+import glob
+import time
+import pyodbc
+import pandas as pd
+import sqlalchemy as sqa
+from tqdm.auto import tqdm
+from snowflake.sqlalchemy import URL
+```
+
+## Create Database Connection
+
+A database engine is necessary for secure and authenticated access to databases. It provides flexibility by allowing easy configuration of various connection parameters, facilitating seamless switching between different databases or server environments. The engine's built-in error handling mechanisms ensure robustness and stability in the face of database-related issues.
+
+We will use one popular Python library, namely `SQLAlchemy` to create a database engine and interact with databases.
+
+### Engine: MySQL
+
+Connection string to create a database engine for the `technical_blog_db` MySQL database:
+
+```python
+username = 'root'
+password = 'your_password'
+host = 'localhost'
+port = '3306'
+database = 'technical_blog_db'
+
+url = 'mysql+pymysql://{0}:{1}@{2}:{3}/{4}'.format(username, password, host, port, database)
+mysql_engine = sqa.create_engine(url)
+mysql_engine
+```
+
+### Engine: PostgreSQL
+
+Connection string to create a database engine for the `technical_blog_db` PostgreSQL database:
+
+```python
+username = 'postgres'
+password = 'your_password'
+host = '203.0.113.10'
+port = '5432'
+database = 'technical_blog_db'
+
+url = 'postgresql+psycopg2://{0}:{1}@{2}:{3}/{4}'.format(username, password, host, port, database)
+postgres_engine = sqa.create_engine(url)
+postgres_engine
+```
+
+### Engine: SQL Server
+
+Connection string to create a database engine for the `technical_blog_db` SQL Server database:
+
+```python
+username = 'your_username'
+password = 'your_password'
+host = 'YOUR-SQL-SERVER'
+port = '1433'
+database = 'technical_blog_db'
+
+url = 'mssql+pymssql://{0}:{1}@{2}:{3}/{4}'.format(username, password, host, port, database)
+sql_server_engine = sqa.create_engine(url)
+sql_server_engine
+```
+
+Note: If you get an error like **Adaptive Server is unavailable or does not exist**, you may follow [this YouTube video](https://www.youtube.com/watch?v=X0gfr2Iyas4) which was helpful for me. 
+
+After following this video, I came to understand that the issue was with my `host` name. Due to some strange unknown reason, Python is not considering the full server name, i.e., `YOUR-SQL-SERVER\SQLEXPRESS` as `host` name. 
+
+Instead it's taking only `YOUR-SQL-SERVER` as the host name, and it took a couple of days for me to debug this issue since I couldn't find a direct solution available for this on the internet.
+
+### Engine: Snowflake
+
+Connection string to create a database engine for the `technical_blog_db` Snowflake database:
+
+```python
+snowflake_engine = sqa.create_engine(URL(
+    account = 'xy12345.us-east-1',
+    user = 'your_username',
+    password = 'your_password',
+    database = 'technical_blog_db',
+    schema = 'python_schema',
+    warehouse = 'compute_wh',
+    role='accountadmin'
+))
+
+snowflake_engine
+```
+
+A similar kind of issue with SQL Server happened in the case of Snowflake as well.
+
+In the `account` parameter, I was passing `abc12345-xxxx` as my full login URL, which is `abc12345-xxxx.snowflakecomputing.com` and it didn't work fine.
+
+Finally, everything worked when I passed `xy12345.us-east-1` as my full account URL, `https://xy12345.us-east-1.snowflakecomputing.com`.
+
+## Source Data from Excel File
+
+In the next few steps, what I'm going to do is: 
+
+- Read an excel file and match 5 sheets out of 7 sheets with the pattern `Orders *`. 
+- While reading the sheets, I'll append the sheets data one after another and store the concatenated data into a variable called "df." 
+- The database system as well as I prefer a unified format for column names. 
+- Hence, I removed all the whitespaces in column names and replaced them with underscores (`_`). 
+- I also converted all the letters into lowercase. 
+
+Thus, the source data is now ready for inserting into databases.
+
+```python
+path = os.getcwd()
+subdirectory = 'data'
+
+file = os.path.join(path, subdirectory, 'superstore_2016-2020_data.xlsx')
+file
+```
+
+Our Excel file can have multiple sheets, all of which we don't need to combine always. Hence, we are selecting only the sheets whose names match the pattern `Orders *`, as these are the sheets that contain yearly order data.
+
+```python
+excel_file = pd.ExcelFile(file)
+
+sheets = excel_file.sheet_names
+r = re.compile('Orders *')
+selected_sheets = list(filter(r.match, sheets))
+
+selected_sheets
+```
+
+Reading and concatenating selected sheets data one after another. Saving the final result into dataframe `df`.
+
+```python
+li = []
+
+for sheet in selected_sheets:
+    data = excel_file.parse(sheet)
+    data['sheet_name'] = sheet.split("\\")[-1]
+    li.append(data)
+
+df = pd.concat(li, axis = 0, ignore_index = True)
+df.head(2)
+```
+
+Reformatting column names
+
+```python
+for col in df.columns:
+    df.rename(columns = {
+        col : re.sub('[^0-9a-zA-Z]+', '_', col).lower()
+    }, inplace = True)
+```
+
+```python
+df.info()
+```
+
+Previewing the final result
+
+```python
+df.head(2)
+```
+
+Verifying the total row count by sheet name in the concatenated dataframe
+
+```python
+df['sheet_name'].value_counts()
+```
+
+```python
+df['sheet_name'].value_counts().sum()
+```
+
+## Write Data into Databases
+
+Now that we have read data from the source, it's time to write it into databases. Below is a general function that will be used to write dataframe `(df)` data into databases.
+
+The function accepts `database engine name`, `table name`, and `schema name` as parameters where `schema name` is an optional parameter as certain databases don't follow schema conventions, e.g., MySQL.
+
+```python
+def write_table_data(db_engine_name, table_name, schema_name = None):
+    df.to_sql(
+        name = table_name,
+        schema = schema_name,
+        con = db_engine_name,
+        if_exists = 'replace',
+        index = False,
+        method = 'multi',
+        chunksize = 1000,
+        dtype = {
+            'order_date': sqa.types.Date,
+            'ship_date' : sqa.types.Date,
+            'sales': sqa.types.Float,
+            'quantity': sqa.types.Integer,
+            'discount': sqa.types.Float,
+            'profit': sqa.types.Float
+        }
+    )
+
+    print('Currnet Database Engine: {0}'.format(db_engine_name))
+    
+    if schema_name is not None:
+        print('\nSuccessfully inserted {0} rows in schema/table: {1}.{2}!'.format(df.shape[0], schema_name, table_name))
+    else:
+        print('\nSuccessfully inserted {0} rows in table: {1}!'.format(df.shape[0], table_name))
+```
+
+### Write: MySQL
+
+```python
+write_table_data(db_engine_name = mysql_engine, table_name = 'superstore_yearly_data')
+```
+
+### Write: PostgreSQL
+
+```sql
+postgres_engine.execute('CREATE SCHEMA IF NOT EXISTS python_schema;')
+```
+
+```python
+write_table_data(db_engine_name = postgres_engine, table_name = 'superstore_yearly_data', schema_name = 'python_schema')
+```
+
+### Write: SQL Server
+
+```sql
+sql_server_engine.execute("""
+    IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'python_schema')
+    BEGIN
+        EXEC('CREATE SCHEMA python_schema')
+    END
+""")
+```
+
+```python
+write_table_data(db_engine_name = sql_server_engine, table_name = 'superstore_yearly_data', schema_name = 'python_schema')
+```
+
+### Write: Snowflake
+
+```sql
+snowflake_engine.execute('CREATE SCHEMA IF NOT EXISTS python_schema;')
+```
+
+```python
+write_table_data(db_engine_name = snowflake_engine, table_name = 'superstore_yearly_data', schema_name = 'python_schema')
+```
+
+## Read Data from Databases
+
+The source data is in databases now. Let's read data using a custom SQL query from each of the databases.
+
+Below is a general function that accepts `database engine name`, `table name`, and `schema name` as parameters, where `schema name` is an optional parameter as certain databases don't follow schema conventions, e.g., MySQL.
+
+Hence we are using two different query strings, i.e., `query_1` (for databases that follow schema convention) and `query_2` (for databases that don't follow schema convention). We are handling this using `if-else` at the bottom section of the function.
+
+```sql
+def read_table_data(db_engine_name, table_name, schema_name = None):
+    query_1 = """
+        SELECT
+            region,
+            category,
+            sub_category,
+            SUM(sales) total_sales,
+            SUM(profit) total_profit,
+            AVG(quantity) avg_quantity,
+            AVG(discount) avg_discount
+
+        FROM {0}.{1}
+
+        GROUP BY 
+            region,
+            category,
+            sub_category
+
+        HAVING SUM(profit) < 0;
+
+    """.format(schema_name, table_name)
+    
+    
+    query_2 = """
+        SELECT
+            region,
+            category,
+            sub_category,
+            SUM(sales) total_sales,
+            SUM(profit) total_profit,
+            AVG(quantity) avg_quantity,
+            AVG(discount) avg_discount
+
+        FROM {0}
+
+        GROUP BY 
+            region,
+            category,
+            sub_category
+
+        HAVING SUM(profit) < 0;
+
+    """.format(table_name)
+    
+    
+    if schema_name != None:
+        df = pd.read_sql(sql = query_1, con = db_engine_name)
+        print('Currnet Database Engine: {0}\n'.format(db_engine_name))
+        print('Successfully read {0} rows from schema/table: {1}.{2}!\n'.format(df.shape[0], schema_name, table_name))
+    
+    else:
+        df = pd.read_sql(sql = query_2, con = db_engine_name)
+        print('Currnet Database Engine: {0}\n'.format(db_engine_name))
+        print('Successfully read {0} rows from table: {1}!\n'.format(df.shape[0], table_name))
+        
+    return df
+```
+
+In the SQL query above, we are taking sales, profit, quantity, and discount by region, category, and sub-category for those orders only where the company incurred a loss (the profit amount is negative '-ve').
+
+### Read: MySQL
+
+```python
+df = read_table_data(db_engine_name = mysql_engine, table_name = 'superstore_yearly_data')
+df.head()
+```
+
+### Read: PostgreSQL
+
+```python
+df = read_table_data(db_engine_name = postgres_engine, table_name = 'superstore_yearly_data', schema_name = 'python_schema')
+df.head()
+```
+
+### Read: SQL Server
+
+```python
+df = read_table_data(db_engine_name = sql_server_engine, table_name = 'superstore_yearly_data', schema_name = 'python_schema')
+df.head()
+```
+
+### Read: Snowflake
+
+```python
+df = read_table_data(db_engine_name = snowflake_engine, table_name = 'superstore_yearly_data', schema_name = 'python_schema')
+df.head()
+```
+
+That's all for today about reading and writing data from common relational databases using Python. I hope it's helpful, and I look forward to seeing you in one of my other writings. Happy learning!
