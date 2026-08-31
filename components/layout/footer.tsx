@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SocialLinks } from "@/components/social/social-links";
 import { siteConfig, socialLinks } from "@/lib/site";
 
@@ -7,9 +8,17 @@ export function Footer() {
   return (
     <footer className="border-t border-gray-200 dark:border-gray-700/60">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-4 py-10 sm:flex-row sm:px-6">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          © {year} {siteConfig.author}
-        </p>
+        <div className="text-center sm:text-left">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            © {year} {siteConfig.author}
+          </p>
+          <Link
+            href={`mailto:${siteConfig.email}`}
+            className="mt-1 inline-block text-sm text-gray-500 transition-colors hover:text-accent dark:text-gray-400"
+          >
+            {siteConfig.email}
+          </Link>
+        </div>
         <SocialLinks links={socialLinks} variant="icon" />
       </div>
     </footer>

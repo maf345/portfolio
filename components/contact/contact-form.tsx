@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { siteConfig } from "@/lib/site";
 
 type FormState = "idle" | "submitting" | "success" | "error";
@@ -43,11 +44,20 @@ export function ContactForm() {
     }
   }
 
+  const inputClassName =
+    "mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm outline-none ring-accent/20 transition focus:border-accent focus:ring-2 disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900/60";
+
   return (
-    <div className="bento-card p-8">
-      <h2 className="text-xl font-bold tracking-tight">Send a message</h2>
-      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-        Send a message and I&apos;ll get back to you at {siteConfig.email}.
+    <div className="bento-card p-6 sm:p-8">
+      <h2 className="font-display text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+        Send a message
+      </h2>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+        Prefer email?{" "}
+        <Link href={`mailto:${siteConfig.email}`} className="font-medium text-accent hover:underline">
+          Write to me directly
+        </Link>
+        . This form will deliver to my inbox once Resend is configured.
       </p>
 
       {state === "success" ? (
@@ -55,8 +65,8 @@ export function ContactForm() {
           Message sent — thanks for reaching out. I&apos;ll reply soon.
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+          <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Name *
@@ -67,7 +77,7 @@ export function ContactForm() {
                 type="text"
                 required
                 disabled={state === "submitting"}
-                className="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none ring-accent/20 transition focus:border-accent focus:ring-2 disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900"
+                className={inputClassName}
               />
             </div>
             <div>
@@ -80,7 +90,7 @@ export function ContactForm() {
                 type="email"
                 required
                 disabled={state === "submitting"}
-                className="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none ring-accent/20 transition focus:border-accent focus:ring-2 disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900"
+                className={inputClassName}
               />
             </div>
           </div>
@@ -93,8 +103,9 @@ export function ContactForm() {
               id="subject"
               name="subject"
               type="text"
+              placeholder="Role inquiry, collaboration, question…"
               disabled={state === "submitting"}
-              className="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none ring-accent/20 transition focus:border-accent focus:ring-2 disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900"
+              className={inputClassName}
             />
           </div>
 
@@ -105,15 +116,28 @@ export function ContactForm() {
             <textarea
               id="message"
               name="message"
-              rows={5}
+              rows={6}
               required
+              placeholder="Tell me a bit about what you have in mind…"
               disabled={state === "submitting"}
-              className="mt-1.5 w-full resize-y rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none ring-accent/20 transition focus:border-accent focus:ring-2 disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900"
+              className={`${inputClassName} resize-y`}
             />
           </div>
 
           {state === "error" && (
-            <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+              {errorMessage.includes("not configured") ? (
+                <>
+                  The form isn&apos;t live yet — please{" "}
+                  <Link href={`mailto:${siteConfig.email}`} className="font-medium underline">
+                    email me directly
+                  </Link>
+                  .
+                </>
+              ) : (
+                errorMessage
+              )}
+            </div>
           )}
 
           <button

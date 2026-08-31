@@ -3,6 +3,7 @@ import { PostCard } from "@/components/blog/post-card";
 import { CertificationsSection } from "@/components/home/certifications-section";
 import { HeroSection } from "@/components/home/hero-section";
 import { StatsBento } from "@/components/home/stats-bento";
+import { TableauShowcaseSection } from "@/components/home/tableau-showcase-section";
 import { TestimonialsSection } from "@/components/home/testimonials-section";
 import { ProjectCard } from "@/components/projects/project-card";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -52,6 +53,7 @@ export default function HomePage() {
         </Link>
       </section>
 
+      <TableauShowcaseSection />
       <CertificationsSection />
       <TestimonialsSection />
 

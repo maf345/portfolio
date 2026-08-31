@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { ContactForm } from "@/components/contact/contact-form";
-import { MailIcon, MapPinIcon } from "@/components/icons";
-import { SectionHeading } from "@/components/ui/section-heading";
+import { ContactInfo } from "@/components/contact/contact-info";
 import { buildPageMetadata } from "@/lib/seo";
 import { siteConfig } from "@/lib/site";
 
@@ -14,58 +12,31 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default function ContactPage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-      <SectionHeading
-        label="Get in touch"
-        title="Contact"
-        description="Reach out about roles, collaborations, or questions on my work."
-      />
-
-      <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <Link
-          href={`mailto:${siteConfig.email}`}
-          className="bento-card group flex flex-col items-center p-8 text-center transition-all hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5"
-        >
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-white">
-            <MailIcon className="h-7 w-7" />
-          </div>
-          <p className="mt-4 text-sm font-medium text-gray-500 dark:text-gray-400">Email</p>
-          <p className="mt-1 font-semibold text-gray-900 group-hover:text-accent dark:text-gray-100">
-            {siteConfig.email}
-          </p>
-        </Link>
-
-        <div className="bento-card flex flex-col items-center p-8 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500">
-            <MapPinIcon className="h-7 w-7" />
-          </div>
-          <p className="mt-4 text-sm font-medium text-gray-500 dark:text-gray-400">Location</p>
-          <p className="mt-1 font-semibold text-gray-900 dark:text-gray-100">
-            {siteConfig.location}
+    <div>
+      <section className="relative overflow-hidden border-b border-gray-200 bg-mesh-light dark:border-gray-800 dark:bg-mesh-dark">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_at_center,black_20%,transparent_75%)]" />
+        <div className="relative mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
+          <p className="section-label">Get in touch</p>
+          <h1 className="mt-3 max-w-2xl font-display text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
+            Let&apos;s talk about data, analytics, or your next project
+          </h1>
+          <p className="mt-4 max-w-xl text-lg leading-relaxed text-gray-600 dark:text-gray-400">
+            Open to roles, collaborations, and questions about my work. Email is the quickest way to
+            reach me for now.
           </p>
         </div>
+      </section>
 
-        {siteConfig.calendlyUrl ? (
-          <Link
-            href={siteConfig.calendlyUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bento-card group flex flex-col items-center p-8 text-center transition-all hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5"
-          >
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-500 transition-colors group-hover:bg-violet-500 group-hover:text-white">
-              <span className="text-xl font-bold">📅</span>
-            </div>
-            <p className="mt-4 text-sm font-medium text-gray-500 dark:text-gray-400">Schedule</p>
-            <p className="mt-1 font-semibold text-gray-900 group-hover:text-accent dark:text-gray-100">
-              Book a 30-min call
-            </p>
-          </Link>
-        ) : null}
-      </div>
-
-      <div className="mt-6">
-        <ContactForm />
-      </div>
+      <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+        <div className="grid gap-10 lg:grid-cols-5 lg:gap-12">
+          <div className="lg:col-span-2">
+            <ContactInfo />
+          </div>
+          <div className="lg:col-span-3">
+            <ContactForm />
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

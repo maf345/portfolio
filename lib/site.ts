@@ -15,7 +15,7 @@ export const siteConfig = {
   links: {
     github: "https://github.com/maf345",
     linkedin: "https://linkedin.com/in/maf345",
-    tableau: "https://public.tableau.com/app/profile/maf345",
+    tableau: "https://public.tableau.com/app/profile/maf345/vizzes",
     hackerrank: "https://hackerrank.com/profile/maf345",
     kaggle: "https://www.kaggle.com/maf345",
   },
@@ -226,6 +226,41 @@ export const navItems = [
   { href: "/blog", label: "Blog" },
   { href: "/contact", label: "Contact" },
 ] as const;
+
+export const tableauVizzes = [
+  {
+    title: "HR Analytics & Employee Attrition",
+    description: "Workforce demographics, satisfaction, and attrition drivers.",
+    workbook: "HRAnalyticsandEmployeeAttritionFactors",
+    view: "HRAnalytics",
+  },
+  {
+    title: "Pet Items Ecommerce",
+    description: "Sales, product mix, and ecommerce performance trends.",
+    workbook: "PetItemsEcommerceBusiness",
+    view: "Dashboard1",
+  },
+  {
+    title: "Customer Churn Analysis",
+    description: "Churn patterns and retention risk segmentation.",
+    workbook: "CustomerChurnAnalysis_16771582196760",
+    view: "ChurnAnalysis",
+  },
+] as const;
+
+export function tableauEmbedUrl(workbook: string, view: string) {
+  const params = new URLSearchParams({
+    ":embed": "y",
+    ":showVizHome": "no",
+    ":tabs": "no",
+    ":toolbar": "yes",
+  });
+  return `https://public.tableau.com/views/${workbook}/${view}?${params.toString()}`;
+}
+
+export function tableauVizUrl(workbook: string, view: string) {
+  return `https://public.tableau.com/app/profile/maf345/viz/${workbook}/${view}`;
+}
 
 export const socialLinks = [
   { href: siteConfig.links.github, label: "GitHub", icon: "github" as const },
