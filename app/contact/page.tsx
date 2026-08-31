@@ -18,7 +18,7 @@ export default function ContactPage() {
       <SectionHeading
         label="Get in touch"
         title="Contact"
-        description="Open to analytics, BI, and data engineering roles."
+        description="Reach out about roles, collaborations, or questions on my work."
       />
 
       <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

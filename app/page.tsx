@@ -27,7 +27,7 @@ export default function HomePage() {
         <SectionHeading
           label="Work"
           title="Featured projects"
-          description="Real outcomes — not résumé bullet points."
+          description="Case studies from healthcare analytics, BI reporting, and internal tools."
           action={
             <Link
               href="/projects"
@@ -61,6 +61,7 @@ export default function HomePage() {
             <SectionHeading
               label="Writing"
               title="Latest from the blog"
+              description="Notes on Python, Snowflake, Tableau, and SQL from recent work."
               action={
                 <Link
                   href="/blog"

@@ -45,7 +45,7 @@ export function ContactForm() {
 
   return (
     <div className="bento-card p-8">
-      <h2 className="text-xl font-bold tracking-tight">Have an idea? Let&apos;s talk</h2>
+      <h2 className="text-xl font-bold tracking-tight">Send a message</h2>
       <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
         Send a message and I&apos;ll get back to you at {siteConfig.email}.
       </p>

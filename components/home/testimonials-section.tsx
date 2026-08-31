@@ -7,7 +7,7 @@ export function TestimonialsSection() {
       <SectionHeading
         label="Recommendations"
         title="What colleagues say"
-        description="Feedback from analytics, BI, and delivery partners."
+        description="From my supervisor at Streams Tech Ltd."
       />
       <div className="mt-8 mx-auto max-w-3xl">
         {testimonials.map((item) => (

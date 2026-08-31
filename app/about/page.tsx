@@ -54,7 +54,7 @@ export default function AboutPage() {
 
       <section className="border-t border-gray-200 bg-surface-muted dark:border-gray-800 dark:bg-surface-dark-muted">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <SectionHeading label="Toolkit" title="Skills" />
+          <SectionHeading label="Expertise" title="Skills" />
           <SkillsShowcase />
         </div>
       </section>

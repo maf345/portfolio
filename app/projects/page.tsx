@@ -16,7 +16,7 @@ export default function ProjectsPage() {
       <SectionHeading
         label="Portfolio"
         title="Projects"
-        description="Selected work with measurable impact — filter by category or search to find what you need."
+        description="Healthcare analytics, telecom dashboards, and internal tools I built or led."
       />
       <div className="mt-10">
         <ProjectList projects={projects} />

@@ -10,7 +10,7 @@ export function CertificationsSection() {
         <SectionHeading
           label="Credentials"
           title="Certifications"
-          description="Industry-validated skills in cloud data platforms."
+          description="SnowPro Core certification and related credentials."
         />
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {certifications.map((cert) => (

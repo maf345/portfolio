@@ -16,7 +16,7 @@ export default function BlogPage() {
       <SectionHeading
         label="Writing"
         title="Blog"
-        description="Tutorials and notes from my analytics toolkit — filter by topic to find what you need."
+        description="Technical write-ups from projects and day-to-day analytics work."
       />
       <div className="mt-10">
         <BlogPostList posts={posts} />
