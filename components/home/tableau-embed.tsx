@@ -8,6 +8,10 @@ type TableauEmbedProps = {
   title: string;
 };
 
+function embedHeight(width: number) {
+  return Math.max(560, Math.min(820, Math.round(width * 0.62)));
+}
+
 export function TableauEmbed({ workbook, view, title }: TableauEmbedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -33,7 +37,8 @@ export function TableauEmbed({ workbook, view, title }: TableauEmbedProps) {
       ["site_root", ""],
       ["name", `${workbook}/${view}`],
       ["tabs", "no"],
-      ["toolbar", "yes"],
+      ["toolbar", "bottom"],
+      ["device", "desktop"],
       ["animate_transition", "yes"],
       ["display_static_image", "yes"],
       ["display_spinner", "yes"],
@@ -53,7 +58,7 @@ export function TableauEmbed({ workbook, view, title }: TableauEmbedProps) {
     container.appendChild(placeholder);
 
     const setHeight = () => {
-      vizObject.style.height = `${placeholder.offsetWidth * 0.75}px`;
+      vizObject.style.height = `${embedHeight(placeholder.offsetWidth)}px`;
     };
 
     setHeight();
@@ -72,5 +77,11 @@ export function TableauEmbed({ workbook, view, title }: TableauEmbedProps) {
     };
   }, [workbook, view]);
 
-  return <div ref={containerRef} className="w-full bg-white dark:bg-gray-900" aria-label={title} />;
+  return (
+    <div
+      ref={containerRef}
+      className="w-full overflow-hidden bg-white dark:bg-gray-950"
+      aria-label={title}
+    />
+  );
 }
