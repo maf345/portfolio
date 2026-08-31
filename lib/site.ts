@@ -231,21 +231,30 @@ export const navItems = [
 export const tableauVizzes = [
   {
     title: "HR Analytics & Employee Attrition",
-    description: "Workforce demographics, satisfaction, and attrition drivers.",
+    description: "Workforce demographics, satisfaction scores, and attrition drivers across departments.",
     workbook: "HRAnalyticsandEmployeeAttritionFactors",
     view: "Story",
+    thumbnail:
+      "https://public.tableau.com/static/images/HR/HRAnalyticsandEmployeeAttritionFactors/Story/1_rss.png",
+    tags: ["Tableau", "HR Analytics", "Attrition"],
   },
   {
     title: "Pet Items Ecommerce",
-    description: "Sales, product mix, and ecommerce performance trends.",
+    description: "Product performance, customer demographics, and ecommerce sales trends.",
     workbook: "PetItemsEcommerceBusiness",
     view: "PetItemSupplyDashboard",
+    thumbnail:
+      "https://public.tableau.com/static/images/Pe/PetItemsEcommerceBusiness/PetItemSupplyDashboard/1_rss.png",
+    tags: ["Tableau", "Ecommerce", "Sales"],
   },
   {
     title: "Customer Churn Analysis",
-    description: "Churn patterns and retention risk segmentation.",
+    description: "Churn patterns, retention risk, and segmentation by state and contract type.",
     workbook: "CustomerChurnAnalysis_16771582196760",
     view: "ChurnAnalysis",
+    thumbnail:
+      "https://public.tableau.com/static/images/Cu/CustomerChurnAnalysis_16771582196760/ChurnAnalysis/1_rss.png",
+    tags: ["Tableau", "Churn", "Segmentation"],
   },
 ] as const;
 
