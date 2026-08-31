@@ -16,9 +16,18 @@ type SocialLinksProps = {
   limit?: number;
   compact?: boolean;
   nowrap?: boolean;
+  gridOnMobile?: boolean;
 };
 
-export function SocialLinks({ links, variant = "pill", className, limit, compact, nowrap }: SocialLinksProps) {
+export function SocialLinks({
+  links,
+  variant = "pill",
+  className,
+  limit,
+  compact,
+  nowrap,
+  gridOnMobile,
+}: SocialLinksProps) {
   const items = limit ? links.slice(0, limit) : links;
 
   if (variant === "icon") {
@@ -80,8 +89,8 @@ export function SocialLinks({ links, variant = "pill", className, limit, compact
   return (
     <div
       className={cn(
-        "flex gap-2",
-        nowrap ? "flex-nowrap justify-center" : "flex-wrap",
+        gridOnMobile ? "grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center" : "flex gap-2",
+        !gridOnMobile && (nowrap ? "flex-nowrap justify-center" : "flex-wrap justify-center"),
         className,
       )}
     >
@@ -97,13 +106,14 @@ export function SocialLinks({ links, variant = "pill", className, limit, compact
             rel="noopener noreferrer"
             title={label}
             className={cn(
-              "group inline-flex shrink-0 items-center gap-2 rounded-lg border border-gray-200 bg-white/60 font-medium text-gray-600 transition-all hover:border-accent hover:bg-accent/5 hover:text-accent hover:shadow-sm dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400 dark:hover:border-accent dark:hover:text-accent",
-              compact ? "px-2.5 py-1.5 text-[11px]" : "px-3 py-1.5 text-xs",
+              "group inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white/60 font-medium text-gray-600 transition-all hover:border-accent hover:bg-accent/5 hover:text-accent hover:shadow-sm dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400 dark:hover:border-accent dark:hover:text-accent",
+              gridOnMobile ? "w-full justify-center px-2 py-2 text-[11px] sm:w-auto sm:shrink-0" : "shrink-0",
+              !gridOnMobile && (compact ? "px-2.5 py-1.5 text-[11px]" : "px-3 py-1.5 text-xs"),
             )}
           >
-            <Icon className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} />
-            {label}
-            {!nowrap && (
+            <Icon className={compact ? "h-3 w-3 shrink-0" : "h-3.5 w-3.5 shrink-0"} />
+            <span className="truncate">{label}</span>
+            {!nowrap && !gridOnMobile && (
               <ExternalLinkIcon className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-70" />
             )}
           </Link>

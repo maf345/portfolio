@@ -12,8 +12,8 @@ export function HeroSection() {
     <section className="relative overflow-hidden bg-mesh-light pb-20 dark:bg-mesh-dark sm:pb-24">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_at_center,black_20%,transparent_75%)]" />
 
-      <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:py-24">
-        <div className="animate-fade-up">
+      <div className="relative mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:py-24">
+        <div className="animate-fade-up w-full min-w-0">
           <div className="flex flex-wrap items-center gap-3">
             <p className="section-label">Data · BI · AI Analytics</p>
             <OpenToWorkBadge />
@@ -25,7 +25,7 @@ export function HeroSection() {
             <span className="text-gray-900 dark:text-white"> Afzal Farazi</span>
           </h1>
           <p className="mt-2 text-lg font-semibold text-gray-700 dark:text-gray-300">{siteConfig.title}</p>
-          <p className="mt-4 max-w-md text-lg leading-relaxed text-gray-600 dark:text-gray-400">
+          <p className="mt-4 max-w-xl text-lg leading-relaxed text-gray-600 dark:text-gray-400">
             {siteConfig.tagline}
           </p>
 
@@ -42,7 +42,7 @@ export function HeroSection() {
         </div>
 
         <div
-          className="relative flex animate-fade-up flex-col items-center lg:justify-self-end"
+          className="relative flex w-full min-w-0 animate-fade-up flex-col items-center lg:justify-self-end"
           style={{ animationDelay: "0.15s" }}
         >
           <div className="relative">
@@ -62,7 +62,13 @@ export function HeroSection() {
               <p className="text-xs text-gray-500 dark:text-gray-400">Years in analytics</p>
             </div>
           </div>
-          <SocialLinks links={socialLinks} variant="pill" compact nowrap className="mt-6 w-full max-w-md" />
+          <SocialLinks
+            links={socialLinks}
+            variant="pill"
+            compact
+            gridOnMobile
+            className="mt-6 w-full sm:max-w-md"
+          />
         </div>
       </div>
       <ScrollIndicator />

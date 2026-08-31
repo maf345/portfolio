@@ -71,7 +71,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${plexSans.variable} ${plexSerif.variable} ${plexMono.variable} min-h-screen bg-gray-50 font-sans antialiased dark:bg-surface-dark`}>
+      <body className={`${plexSans.variable} ${plexSerif.variable} ${plexMono.variable} min-h-screen overflow-x-hidden bg-gray-50 font-sans antialiased dark:bg-surface-dark`}>
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"

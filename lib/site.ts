@@ -185,11 +185,18 @@ export const certifications = [
 
 export const volunteerWork = [
   {
-    title: "Local Guide",
+    title: "Local Guide · Level 7",
     organization: "Google Maps",
     period: "Ongoing",
     description:
       "Contributing reviews, photos, and place updates to improve local business and location data — especially around Dhaka and Bangladesh.",
+    metrics: [
+      { value: "1.5k+", label: "Contributions" },
+      { value: "2.3M", label: "Review views" },
+      { value: "1.9M", label: "Photo views" },
+    ],
+    badges: ["Master Reviewer", "Expert Photographer"],
+    logo: "google-maps" as const,
     href: "https://maps.app.goo.gl/CNakphK8Fa7fCxpE9",
     linkLabel: "View Maps profile",
   },
@@ -199,6 +206,7 @@ export const volunteerWork = [
     period: "Dec 2017 – Jul 2018",
     description:
       "Led a social awareness project, “Uthbo Mora Foot overbridge e, Thakbo nirapode,” under the Mirpur-10 foot overbridge — supervised by British Council and Democracywatch.",
+    logo: "british-council" as const,
     href: "https://www.britishcouncil.org.bd/",
     linkLabel: "British Council Bangladesh",
   },
@@ -244,7 +252,7 @@ export const navItems = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
   { href: "/projects", label: "Projects" },
-  { href: "/dashboards", label: "BI Work" },
+  { href: "/dashboards", label: "Dashboards" },
   { href: "/blog", label: "Blog" },
   { href: "/contact", label: "Contact" },
 ] as const;
