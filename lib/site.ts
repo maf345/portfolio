@@ -191,6 +191,27 @@ export const testimonials = [
     role: "Supervisor",
     company: "Streams Tech Ltd.",
   },
+  {
+    quote:
+      "I consider myself very lucky that I got the opportunity to work with Mehedi. He is phenomenal, he is kind. Most importantly, he is very honest and one of the most talented people in the workplace. I can see he will fly so high in the future, and I really want him to shine like a crazy diamond.",
+    name: "Mohammad Faisul Alam",
+    role: "Commercial Analyst",
+    company: "MILVIK Bangladesh Ltd.",
+  },
+  {
+    quote:
+      "It was a pleasure to work with a colleague who was committed to their success and to supporting the team. Wishing you all the best in your future endeavors.",
+    name: "Swaroop Bhattacharya",
+    role: "Sales Manager",
+    company: "MILVIK Bangladesh Ltd.",
+  },
+  {
+    quote:
+      "In my time working with Mehedi, I found him very humble — a quality that builds long-term success and positive relationships with stakeholders. I wish him all the best.",
+    name: "Zubayer Ibna Zahir",
+    role: "Finance HoD",
+    company: "MILVIK Bangladesh Ltd.",
+  },
 ] as const;
 
 export const languages = [
