@@ -183,6 +183,27 @@ export const certifications = [
   },
 ] as const;
 
+export const volunteerWork = [
+  {
+    title: "Local Guide",
+    organization: "Google Maps",
+    period: "Ongoing",
+    description:
+      "Contributing reviews, photos, and place updates to improve local business and location data — especially around Dhaka and Bangladesh.",
+    href: "https://maps.app.goo.gl/CNakphK8Fa7fCxpE9",
+    linkLabel: "View Maps profile",
+  },
+  {
+    title: "Volunteer",
+    organization: "British Council",
+    period: "Dec 2017 – Jul 2018",
+    description:
+      "Led a social awareness project, “Uthbo Mora Foot overbridge e, Thakbo nirapode,” under the Mirpur-10 foot overbridge — supervised by British Council and Democracywatch.",
+    href: "https://www.britishcouncil.org.bd/",
+    linkLabel: "British Council Bangladesh",
+  },
+] as const;
+
 export const testimonials = [
   {
     quote:

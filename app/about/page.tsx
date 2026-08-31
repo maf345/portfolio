@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { VolunteerSection } from "@/components/about/volunteer-section";
 import { ExperienceTimeline } from "@/components/about/experience-timeline";
 import { SkillsShowcase } from "@/components/about/skills-showcase";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -100,6 +101,8 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      <VolunteerSection />
     </div>
   );
 }
