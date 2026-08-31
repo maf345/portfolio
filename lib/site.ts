@@ -231,22 +231,26 @@ export const tableauVizzes = [
   {
     title: "HR Analytics & Employee Attrition",
     description: "Workforce demographics, satisfaction, and attrition drivers.",
-    href: "https://public.tableau.com/app/profile/maf345/vizzes",
-    accent: "from-sky-600 via-blue-700 to-indigo-900",
+    workbook: "HRAnalyticsandEmployeeAttritionFactors",
+    view: "Story",
   },
   {
     title: "Pet Items Ecommerce",
     description: "Sales, product mix, and ecommerce performance trends.",
-    href: "https://public.tableau.com/app/profile/maf345/vizzes",
-    accent: "from-emerald-600 via-teal-700 to-cyan-900",
+    workbook: "PetItemsEcommerceBusiness",
+    view: "PetItemSupplyDashboard",
   },
   {
     title: "Customer Churn Analysis",
     description: "Churn patterns and retention risk segmentation.",
-    href: "https://public.tableau.com/app/profile/maf345/viz/CustomerChurnAnalysis_16771582196760/ChurnAnalysis",
-    accent: "from-orange-500 via-amber-600 to-rose-800",
+    workbook: "CustomerChurnAnalysis_16771582196760",
+    view: "ChurnAnalysis",
   },
 ] as const;
+
+export function tableauVizUrl(workbook: string, view: string) {
+  return `https://public.tableau.com/app/profile/maf345/viz/${workbook}/${view}`;
+}
 
 export const socialLinks = [
   { href: siteConfig.links.github, label: "GitHub", icon: "github" as const },
