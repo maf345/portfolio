@@ -52,9 +52,6 @@ export default function HomePage() {
         </Link>
       </section>
 
-      <CertificationsSection />
-      <TestimonialsSection />
-
       {latestPosts.length > 0 && (
         <section className="border-t border-gray-200 bg-surface-muted dark:border-gray-800 dark:bg-surface-dark-muted">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
@@ -80,6 +77,9 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      <CertificationsSection />
+      <TestimonialsSection />
     </div>
   );
 }
