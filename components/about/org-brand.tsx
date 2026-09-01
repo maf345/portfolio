@@ -8,6 +8,8 @@ type OrgBrandProps = {
   website?: string;
   logo?: string;
   subtitle?: string;
+  meta?: string;
+  logoSize?: "default" | "lg";
   className?: string;
   headingLevel?: "h2" | "h3";
 };
@@ -24,10 +26,13 @@ export function OrgBrand({
   website,
   logo,
   subtitle,
+  meta,
+  logoSize = "default",
   className,
   headingLevel = "h3",
 }: OrgBrandProps) {
   const Heading = headingLevel;
+  const isLargeLogo = logoSize === "lg";
 
   const title = website ? (
     <Link
@@ -44,15 +49,20 @@ export function OrgBrand({
   );
 
   return (
-    <div className={cn("flex items-start gap-3", className)}>
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+    <div className={cn("flex items-center gap-3.5 sm:gap-4", className)}>
+      <div
+        className={cn(
+          "flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 shadow-sm dark:border-gray-600",
+          isLargeLogo ? "h-14 w-14 sm:h-16 sm:w-16" : "h-11 w-11",
+        )}
+      >
         {logo ? (
           <Image
             src={logo}
             alt=""
-            width={36}
-            height={36}
-            className="h-9 w-9 object-contain"
+            width={isLargeLogo ? 52 : 36}
+            height={isLargeLogo ? 52 : 36}
+            className={cn("object-contain", isLargeLogo ? "h-12 w-12 sm:h-14 sm:w-14" : "h-9 w-9")}
           />
         ) : (
           <span className="text-xs font-bold text-accent">{initialsFromName(name)}</span>
@@ -61,7 +71,10 @@ export function OrgBrand({
       <div className="min-w-0">
         {title}
         {subtitle && (
-          <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{subtitle}</p>
+        )}
+        {meta && (
+          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-500">{meta}</p>
         )}
       </div>
     </div>

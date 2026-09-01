@@ -152,7 +152,7 @@ export const experience = [
   },
   {
     company: "Bangla Trac Communications Ltd.",
-    website: "https://www.banglatrac.com/",
+    website: "https://www.btraccl.com/",
     logo: "/images/orgs/bangla-trac.png",
     location: "Dhaka, Bangladesh",
     roles: [
@@ -191,7 +191,8 @@ export const certifications = [
   {
     name: "Snowflake SnowPro Core Certified",
     year: "2023",
-    href: "https://www.credly.com/badges/314cd26d-e40f-490a-a1a5-1d6d4bc1fcf5",
+    href: "https://www.credly.com/go/jg9iFBC8",
+    logo: "/images/certifications/snowpro.png",
   },
 ] as const;
 

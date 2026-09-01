@@ -9,6 +9,13 @@ import { cn } from "@/lib/utils";
 const ROTATE_MS = 7000;
 const SWIPE_THRESHOLD = 48;
 
+function initialsFromName(name: string) {
+  const words = name.replace(/[().,]/g, " ").split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "?";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
+}
+
 export function TestimonialsSection() {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -77,20 +84,43 @@ export function TestimonialsSection() {
 
           <figure
             key={item.name}
-            className="bento-card flex min-h-[220px] flex-1 touch-pan-y select-none flex-col p-6 animate-fade-up sm:p-8"
+            className="bento-card relative flex min-h-[220px] flex-1 touch-pan-y select-none flex-col overflow-hidden animate-fade-up"
             aria-live="polite"
             onTouchStart={(e) => handleTouchStart(e.touches[0].clientX)}
             onTouchEnd={(e) => handleTouchEnd(e.changedTouches[0].clientX)}
           >
-            <blockquote className="flex-1 text-sm leading-relaxed text-gray-700 dark:text-gray-300 sm:text-[15px]">
-              &ldquo;{item.quote}&rdquo;
-            </blockquote>
-            <figcaption className="mt-5 border-t border-gray-100 pt-4 dark:border-gray-800">
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{item.name}</p>
-              <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                {item.role} · {item.company}
-              </p>
-            </figcaption>
+            <div
+              className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-accent via-accent/60 to-transparent"
+              aria-hidden
+            />
+            <div className="relative flex flex-1 flex-col px-6 py-6 sm:px-8 sm:py-8">
+              <span
+                className="font-serif text-5xl leading-none text-accent/25 dark:text-accent/35"
+                aria-hidden
+              >
+                &ldquo;
+              </span>
+              <blockquote className="mt-1 text-sm leading-relaxed text-gray-700 dark:text-gray-300 sm:text-[15px]">
+                {item.quote}
+              </blockquote>
+
+              <figcaption className="mt-6 flex items-center gap-3 border-t border-dashed border-gray-200 pt-5 dark:border-gray-700">
+                <div
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-accent/20 bg-accent/10 text-xs font-bold text-accent dark:border-accent/30 dark:bg-accent/15"
+                  aria-hidden
+                >
+                  {initialsFromName(item.name)}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{item.name}</p>
+                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-accent/80 dark:text-accent-light/90">{item.role}</span>
+                    <span className="mx-1.5 text-gray-300 dark:text-gray-600">·</span>
+                    {item.company}
+                  </p>
+                </div>
+              </figcaption>
+            </div>
           </figure>
 
           <button

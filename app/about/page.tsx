@@ -72,12 +72,11 @@ export default function AboutPage() {
                     name={item.institution}
                     website={item.website}
                     logo={item.logo}
+                    subtitle={item.credential}
+                    meta={`${item.period} · ${item.location}`}
+                    logoSize="lg"
                     headingLevel="h3"
                   />
-                  <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">{item.credential}</p>
-                  <p className="mt-1 text-xs text-gray-500">
-                    {item.period} · {item.location}
-                  </p>
                 </div>
               ))}
             </div>
@@ -92,15 +91,26 @@ export default function AboutPage() {
                   href={cert.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 transition-all hover:border-emerald-400 hover:shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:hover:border-emerald-700"
+                  className="group flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-100 px-4 py-3 transition-all hover:border-gray-300 hover:shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:hover:border-gray-500"
                 >
-                  <div>
-                    <p className="text-sm font-medium text-emerald-800 group-hover:text-emerald-900 dark:text-emerald-300">
+                  {"logo" in cert && cert.logo && (
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-600">
+                      <Image
+                        src={cert.logo}
+                        alt=""
+                        width={40}
+                        height={40}
+                        className="h-10 w-10 object-contain"
+                      />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium leading-snug text-gray-900 group-hover:text-accent dark:text-gray-100">
                       {cert.name}
                     </p>
-                    <p className="text-xs text-emerald-700/80 dark:text-emerald-400/80">{cert.year}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{cert.year}</p>
                   </div>
-                  <ExternalLinkIcon className="h-4 w-4 shrink-0 text-emerald-600 opacity-60 transition-opacity group-hover:opacity-100 dark:text-emerald-400" />
+                  <ExternalLinkIcon className="h-4 w-4 shrink-0 text-gray-400 opacity-60 transition-opacity group-hover:opacity-100 group-hover:text-accent" />
                 </Link>
               ))}
             </div>
