@@ -171,7 +171,7 @@ export const experience = [
 export const education = [
   {
     institution: "Military Institute of Science and Technology (MIST)",
-    website: "https://mist.edu.bd/",
+    website: "https://mist.ac.bd/",
     logo: "/images/orgs/mist.png",
     credential: "B.Sc. in Computer Science and Engineering",
     period: "2014 – 2018",
@@ -179,7 +179,7 @@ export const education = [
   },
   {
     institution: "Barisal Cadet College",
-    website: "https://bcc.edu.bd/",
+    website: "https://bcc.army.mil.bd/",
     logo: "/images/orgs/bcc.png",
     credential: "Higher Secondary Certificate, Science",
     period: "2013",

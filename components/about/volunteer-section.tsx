@@ -75,18 +75,6 @@ export function VolunteerSection() {
             </Link>
           ))}
         </div>
-
-        <p className="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
-          Google Maps icon by{" "}
-          <Link
-            href="https://icons8.com/icon/DcygmpZqBEd9/google-maps"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-accent hover:underline"
-          >
-            Icons8
-          </Link>
-        </p>
       </div>
     </section>
   );
