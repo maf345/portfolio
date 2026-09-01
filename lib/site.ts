@@ -91,6 +91,8 @@ export const skills = [
 export const experience = [
   {
     company: "Streams Tech Ltd.",
+    website: "https://www.streamstech.com/",
+    logo: "/images/orgs/streams-tech.png",
     location: "Dhaka, Bangladesh",
     roles: [
       {
@@ -117,6 +119,8 @@ export const experience = [
   },
   {
     company: "MILVIK Bangladesh Ltd.",
+    website: "https://www.milvik.com/",
+    logo: "/images/orgs/milvik.png",
     location: "Dhaka, Bangladesh",
     roles: [
       {
@@ -132,6 +136,8 @@ export const experience = [
   },
   {
     company: "Summit Communications Ltd.",
+    website: "https://www.summitcommunications.net/",
+    logo: "/images/orgs/summit.png",
     location: "Dhaka, Bangladesh",
     roles: [
       {
@@ -146,6 +152,8 @@ export const experience = [
   },
   {
     company: "Bangla Trac Communications Ltd.",
+    website: "https://www.banglatrac.com/",
+    logo: "/images/orgs/bangla-trac.png",
     location: "Dhaka, Bangladesh",
     roles: [
       {
@@ -163,12 +171,16 @@ export const experience = [
 export const education = [
   {
     institution: "Military Institute of Science and Technology (MIST)",
+    website: "https://mist.edu.bd/",
+    logo: "/images/orgs/mist.png",
     credential: "B.Sc. in Computer Science and Engineering",
     period: "2014 – 2018",
     location: "Dhaka, Bangladesh",
   },
   {
     institution: "Barisal Cadet College",
+    website: "https://bcc.edu.bd/",
+    logo: "/images/orgs/bcc.png",
     credential: "Higher Secondary Certificate, Science",
     period: "2013",
     location: "Barisal, Bangladesh",

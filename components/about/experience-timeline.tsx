@@ -1,3 +1,4 @@
+import { OrgBrand } from "@/components/about/org-brand";
 import { experience } from "@/lib/site";
 
 export function ExperienceTimeline() {
@@ -12,10 +13,12 @@ export function ExperienceTimeline() {
           </div>
 
           <div className="bento-card p-5 sm:p-6">
-            <div>
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100">{job.company}</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{job.location}</p>
-            </div>
+            <OrgBrand
+              name={job.company}
+              website={job.website}
+              logo={job.logo}
+              subtitle={job.location}
+            />
 
             <div className="mt-5 space-y-5">
               {job.roles.map((role, roleIndex) => (

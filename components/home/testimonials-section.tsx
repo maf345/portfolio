@@ -1,16 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRightIcon } from "@/components/icons";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { testimonials } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 const ROTATE_MS = 7000;
+const SWIPE_THRESHOLD = 48;
 
 export function TestimonialsSection() {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const touchStartX = useRef<number | null>(null);
 
   const goTo = useCallback((nextIndex: number) => {
     setIndex((nextIndex + testimonials.length) % testimonials.length);
@@ -24,6 +26,30 @@ export function TestimonialsSection() {
     return () => window.clearInterval(timer);
   }, [paused]);
 
+  const resumeAuto = useCallback(() => {
+    window.setTimeout(() => setPaused(false), ROTATE_MS);
+  }, []);
+
+  const handleTouchStart = (clientX: number) => {
+    touchStartX.current = clientX;
+    setPaused(true);
+  };
+
+  const handleTouchEnd = (clientX: number) => {
+    if (touchStartX.current === null) return;
+
+    const delta = clientX - touchStartX.current;
+    touchStartX.current = null;
+
+    if (delta < -SWIPE_THRESHOLD) {
+      goTo(index + 1);
+    } else if (delta > SWIPE_THRESHOLD) {
+      goTo(index - 1);
+    }
+
+    resumeAuto();
+  };
+
   const item = testimonials[index];
 
   return (
@@ -35,7 +61,7 @@ export function TestimonialsSection() {
       />
 
       <div
-        className="mt-8 mx-auto max-w-3xl"
+        className="mx-auto mt-8 max-w-3xl"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
@@ -51,8 +77,10 @@ export function TestimonialsSection() {
 
           <figure
             key={item.name}
-            className="bento-card flex min-h-[220px] flex-1 flex-col p-6 sm:p-8 animate-fade-up"
+            className="bento-card flex min-h-[220px] flex-1 touch-pan-y select-none flex-col p-6 animate-fade-up sm:p-8"
             aria-live="polite"
+            onTouchStart={(e) => handleTouchStart(e.touches[0].clientX)}
+            onTouchEnd={(e) => handleTouchEnd(e.changedTouches[0].clientX)}
           >
             <blockquote className="flex-1 text-sm leading-relaxed text-gray-700 dark:text-gray-300 sm:text-[15px]">
               &ldquo;{item.quote}&rdquo;
@@ -75,7 +103,8 @@ export function TestimonialsSection() {
           </button>
         </div>
 
-        <div className="mt-5 flex items-center justify-center gap-2">          {testimonials.map((testimonial, i) => (
+        <div className="mt-5 flex items-center justify-center gap-2">
+          {testimonials.map((testimonial, i) => (
             <button
               key={testimonial.name}
               type="button"

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { OrgBrand } from "@/components/about/org-brand";
 import { VolunteerSection } from "@/components/about/volunteer-section";
 import { ExperienceTimeline } from "@/components/about/experience-timeline";
 import { SkillsShowcase } from "@/components/about/skills-showcase";
@@ -67,11 +68,16 @@ export default function AboutPage() {
             <div className="mt-6 space-y-4">
               {education.map((item) => (
                 <div key={item.institution} className="bento-card p-5">
-                  <p className="font-semibold">{item.institution}</p>
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    {item.credential}
+                  <OrgBrand
+                    name={item.institution}
+                    website={item.website}
+                    logo={item.logo}
+                    headingLevel="h3"
+                  />
+                  <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">{item.credential}</p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {item.period} · {item.location}
                   </p>
-                  <p className="mt-1 text-xs text-gray-500">{item.period} · {item.location}</p>
                 </div>
               ))}
             </div>
